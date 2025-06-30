@@ -1,0 +1,75 @@
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-in-out forwards;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+.animation-delay-600 {
+  animation-delay: 0.6s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+.hover-lift {
+  transition: transform 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+.hover-glow {
+  transition: box-shadow 0.2s ease-out;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
