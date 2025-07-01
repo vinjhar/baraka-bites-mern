@@ -14,3 +14,7 @@ API.interceptors.request.use((config) => {
 export const signup = (data) => API.post('/auth/signup', data);
 export const signin = (data) => API.post('/auth/signin', data);
 export const resendVerification = (data) => API.post('/auth/resend-verification', data);
+
+export const forgotPassword = (data) => API.post('/auth/forgot-password', data);
+
+export const resetPassword = (token, data) => API.post(`/auth/reset-password/${token}`, data);

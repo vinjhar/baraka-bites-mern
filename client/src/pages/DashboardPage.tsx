@@ -138,7 +138,7 @@ const DashboardPage: React.FC = () => {
     <h2 className="text-2xl font-bold text-primary mb-6">Recent Recipes</h2>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {recipes
-        .slice(0, 3) // only take first 3 (most recent)
+        .slice(0, 3)
         .map((r) => <RecipeCard key={r._id} recipe={r} onDelete={(id) => setRecipes(prev => prev.filter(r => r._id !== id))}/>)}
     </div>
   </div>

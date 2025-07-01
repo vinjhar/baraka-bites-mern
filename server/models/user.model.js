@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   verificationToken: String,
   recipesGenerated: { type: Number, default: 0 },
+
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
+  
   recipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' }],
   isPremium: { type: Boolean, default: false },
 }, { timestamps: true });

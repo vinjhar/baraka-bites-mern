@@ -7,6 +7,7 @@ import passport from 'passport';
 import './config/passport.config.js';
 import authRoutes from "./routes/auth.route.js"
 import recipeRoutes from "./routes/recipe.route.js"
+import paymentRoutes from "./routes/payment.route.js"
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ app.get('/', (req, res)=> {
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/recipes', recipeRoutes);
-// app.use('/api/v1/payment', paymentRoutes);
+app.use('/api/v1/payment', paymentRoutes);
 
 app.listen(PORT, async ()=>{ 
     console.log(`Server running on port http://localhost:${PORT}`)

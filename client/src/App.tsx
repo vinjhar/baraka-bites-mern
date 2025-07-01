@@ -20,12 +20,16 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import CheckoutCancelPage from './pages/CheckoutCancelPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
 
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
-import RecipeCard from './components/RecipeCard';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
+import GoogleCallback from './components/GoogleCallback';
+import ResendVerificationPage from './pages/ResendVerificationPage';
+import EmailVerified from './pages/EmailVerified';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 
 const App = () => {
@@ -35,22 +39,24 @@ const App = () => {
       
          <Layout>
             <Routes>
-              <Route path='/testCard' element={
-                <div className="bg-gray-50 min-h-screen p-4">
-                <RecipeCard />
-                </div>
-              } />
+              
               <Route path="/" element={<HomePage />} />
               <Route path="/home" element={<HomePage />} />
               <Route path="/SignIn" element={<SignIn />} />
               <Route path="/SignUp" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              
               <Route path="/email-confirmation" element={<EmailConfirmationPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/resend-verification" element={<ResendVerificationPage />} />
+              <Route path="/email-verified" element={<EmailVerified />} />
+              <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/dashboard" element={
              
                   <DashboardPage />
                
-              } />
+               } />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/sunnah-foods" element={<SunnahFoodsPage />} />
               <Route path="/blog" element={<BlogPage />} />

@@ -6,16 +6,19 @@ import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const res = await signup(form);
-      setMessage(res.data.message);
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Error');
-    }
+  try {
+  const res = await signup(form);
+  setMessage({ text: res.data.message, type: 'success' });
+} catch (err) {
+  setMessage({
+    text: err.response?.data?.message || 'Error',
+    type: 'error'
+  });
+}
   };
 
   return (
@@ -104,8 +107,14 @@ const SignUp = () => {
         </p>
 
          {message && (
-        <div className="mt-3 bg-red-50 border-l-4 border-red-500 p-4 mb-4">
-          <p className="text-red-700">{message}</p>
+        <div
+          className={`mt-3 border-l-4 p-4 mb-4 ${
+            message.type === 'success'
+              ? 'bg-green-50 border-green-500 text-green-700'
+              : 'bg-red-50 border-red-500 text-red-700'
+          }`}
+        >
+          <p>{message.text}</p>
         </div>
       )}
        </div>

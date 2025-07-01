@@ -1,16 +1,15 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+interface Props {
+  isAuthenticated: boolean;
+  isSubscribed: boolean;
+}
 
-// Make sure you have supabase client imported or globally available
- 
-const UpgradeToPremium: React.FC = () => {
+const UpgradeToPremium: React.FC<Props> = ({ isAuthenticated, isSubscribed }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-
-  const isAuthenticated = false
 
   const resetState = useCallback(() => {
     setIsLoading(false);
@@ -23,12 +22,8 @@ const UpgradeToPremium: React.FC = () => {
       return;
     }
 
-    console.log('Starting upgrade process...', { isAuthenticated });
-    setIsLoading(true);
-
     if (!isAuthenticated) {
-      console.log('User not authenticated, redirecting to auth page');
-      window.location.href = '/auth';
+      window.location.href = '/signin';
       return;
     }
 
@@ -36,51 +31,26 @@ const UpgradeToPremium: React.FC = () => {
       resetState();
       setIsLoading(true);
 
-      console.log('Initiating checkout process...');
+      const res = await fetch('http://localhost:7001/api/v1/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          priceId: STRIPE_PRODUCTS.PREMIUM.priceId
+        })
+      });
 
-      const timeoutId = setTimeout(() => {
-        console.error('Checkout process timed out');
-        setError('Request timed out. Please try again.');
-        setIsLoading(false);
-      }, 30000);
+      const { url } = await res.json();
 
-      const checkoutUrl = await redirectToCheckout(
-        STRIPE_PRODUCTS.PREMIUM.priceId!,
-        STRIPE_PRODUCTS.PREMIUM.mode
-      );
+      if (!url) throw new Error('No checkout URL returned.');
 
-      clearTimeout(timeoutId);
-      resetState();
-
-      console.log('Received checkout URL:', checkoutUrl);
-
-      if (!checkoutUrl) {
-        throw new Error('No checkout URL received');
-      }
-
-      console.log('Redirecting to Stripe checkout...');
-      window.location.href = checkoutUrl;
+      window.location.href = url;
     } catch (err: any) {
-      console.error('Upgrade error:', err);
-
-      let errorMessage = 'Failed to start upgrade process. Please try again.';
-      if (err.message.includes('session has expired')) {
-        errorMessage = 'Your session has expired. Please sign in again.';
-      } else if (err.message.includes('network')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (err.message.includes('timeout')) {
-        errorMessage = 'Request timed out. Please try again.';
-      } else if (err.message.includes('customer')) {
-        errorMessage = 'Unable to create customer profile. Please try again or contact support.';
-      } else if (err.message.includes('price')) {
-        errorMessage = 'Invalid subscription plan. Please contact support.';
-      } else if (err.message.includes('permission')) {
-        errorMessage = 'You do not have permission to perform this action.';
-      } else if (err.message.includes('too many requests')) {
-        errorMessage = 'Too many requests. Please try again in a few minutes.';
-      }
-
-      setError(errorMessage);
+      setError('Upgrade failed. Please try again or contact support.');
+      console.error(err);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -91,7 +61,7 @@ const UpgradeToPremium: React.FC = () => {
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md flex items-start">
-          <AlertCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 mr-2 mt-0.5" />
           <span className="text-sm">{error}</span>
         </div>
       )}
@@ -113,9 +83,9 @@ const UpgradeToPremium: React.FC = () => {
         )}
       </button>
 
-      <div className="mt-4 space-y-2">
-        <p className="text-sm text-gray-600">Get access to:</p>
-        <ul className="text-sm text-gray-600 space-y-1">
+      <div className="mt-4 space-y-2 text-sm text-gray-600">
+        <p>Get access to:</p>
+        <ul className="space-y-1">
           <li>• Unlimited recipe generations</li>
           <li>• Save favorite recipes</li>
           <li>• Advanced cooking techniques</li>

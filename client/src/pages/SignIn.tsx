@@ -70,15 +70,37 @@ const SignIn = () => {
           name='password'
           onChange={(e) => setForm({ ...form, password: e.target.value })} />
 
+          <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="font-medium text-primary hover:text-primary/80"
+                >
+                  Forgot your password?
+                </button>
+              </div>
+
+              <div className="flex items-center justify-end">
+                <button
+                  type="button"
+                  onClick={() => navigate('/resend-verification')}
+                  className="font-medium text-primary hover:text-primary/80 text-sm mt-2"
+                >
+                  Didn't get your verification email?
+                </button>
+
+              </div>
+
           <button 
             className="mt-5 *:flex items-center font-semibold justify-center w-full text-sm bg-green-600 hover:bg-green-700 text-white rounded-md px-4 py-2 transition-colors duration-200"
             type="submit"
           >
             Sign In
           </button>
-          <hr className='m-5'/>
-          <GoogleLoginButton />
         </form>
+
+         <hr className='m-5'/>
+          <GoogleLoginButton />
 
         <p className='mt-3 text-center text-sm text-gray-600'>
           Don't have an account?

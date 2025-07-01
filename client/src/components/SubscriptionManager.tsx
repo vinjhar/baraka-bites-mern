@@ -4,24 +4,40 @@ import { Loader2 } from 'lucide-react';
 const SubscriptionManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const user = false;
 
   const handleManageSubscription = async () => {
     setIsLoading(true);
     setError(null);
 
-  }
+    try {
+      const res = await fetch('http://localhost:7001/api/v1/stripe/manage-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      const { url } = await res.json();
+
+      if (!url) throw new Error('No portal URL received.');
+      window.location.href = url;
+    } catch (err: any) {
+      setError('Unable to manage subscription. Try again.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-primary/10">
       <h3 className="text-lg font-semibold text-primary mb-4">Subscription Management</h3>
-      
+
       {error && (
-        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">
-          {error}
-        </div>
+        <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md">{error}</div>
       )}
-      
+
       <button
         onClick={handleManageSubscription}
         disabled={isLoading}
@@ -36,9 +52,9 @@ const SubscriptionManager: React.FC = () => {
           'Manage Subscription'
         )}
       </button>
-      
+
       <p className="mt-2 text-sm text-gray-500 text-center">
-        Manage your subscription, update payment method, or cancel anytime
+        Update payment method or cancel anytime.
       </p>
     </div>
   );
