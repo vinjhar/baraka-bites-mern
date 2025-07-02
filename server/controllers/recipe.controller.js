@@ -28,6 +28,17 @@ export const generateRecipe = async (req, res) => {
 
   const prompt = `
 Create a 100% halal ${mealType} recipe using: ${filtered.join(', ')}.
+
+CRITICAL REQUIREMENTS:
+  - The recipe MUST be strictly halal
+  - NO pork, alcohol, or any non-halal ingredients
+  - If meat is used, assume it's already halal-certified (don't prefix with "halal")
+  - NO cooking wine or alcohol-based extracts
+  - Use halal substitutes for any non-halal ingredients
+  - Create a unique variation if possible
+  - Only mention "halal" for ingredients that specifically need clarification
+  - Make sure given all measurements for the ingredients used in recipe
+
 Format as a JSON object:
 {
   "title": "...",
@@ -98,6 +109,110 @@ Format as a JSON object:
     res.status(500).json({ error: err.message || 'Internal server error' });
   }
 };
+
+
+// POST /generate-openai
+export const generateRecipeWithOpenAI = async (req, res) => {
+  const { ingredients, mealType } = req.body;
+  const userId = req.user._id;
+
+  if (!ingredients || !Array.isArray(ingredients) || !mealType || !userId) {
+    return res.status(400).json({ error: 'Missing or invalid fields: ingredients, mealType required.' });
+  }
+
+  const filtered = ingredients.filter(i =>
+    !HARAM_INGREDIENTS.some(h => i.toLowerCase().includes(h))
+  );
+
+  if (filtered.length === 0) {
+    return res.status(400).json({ error: 'All provided ingredients are haram.' });
+  }
+
+  const prompt = `
+Create a 100% halal ${mealType} recipe using: ${filtered.join(', ')}.
+
+CRITICAL REQUIREMENTS:
+- The recipe MUST be strictly halal
+- NO pork, alcohol, or any non-halal ingredients
+- If meat is used, assume it's already halal-certified (don't prefix with "halal")
+- NO cooking wine or alcohol-based extracts
+- Use halal substitutes for any non-halal ingredients
+- Create a unique variation if possible
+- Only mention "halal" for ingredients that specifically need clarification
+- Make sure given all measurements for the ingredients used in recipe
+
+Respond ONLY in the following JSON format:
+{
+  "title": "...",
+  "description": "...",
+  "ingredients": ["..."],
+  "instructions": ["..."],
+  "prepTime": "...",
+  "cookTime": "..."
+}
+`;
+
+  try {
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: "You are a halal recipe assistant." },
+          { role: "user", content: `STRICTLY respond ONLY with valid JSON object. DO NOT include explanation. Just the object:\n\n${prompt}` }
+        ],
+        temperature: 0.7
+      })
+    });
+
+    const result = await openaiRes.json();
+    const content = result.choices?.[0]?.message?.content;
+
+    if (!openaiRes.ok) {
+      return res.status(openaiRes.status).json({ error: result?.error?.message || 'OpenAI API failed.' });
+    }
+
+    if (!content) {
+      return res.status(500).json({ error: 'Empty content from OpenAI model.' });
+    }
+
+    console.log('🔍 OpenAI Raw Content:', content);
+
+    let cleaned = content.trim();
+    if (cleaned.startsWith("```json") || cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```json|^```/, '').replace(/```$/, '').trim();
+    }
+
+    let parsedRecipe;
+    try {
+      parsedRecipe = JSON.parse(cleaned);
+    } catch (err) {
+      return res.status(500).json({ error: 'Failed to parse JSON from OpenAI response.' });
+    }
+
+    const recipeDoc = await Recipe.create({
+      ...parsedRecipe,
+      userId,
+      mealType,
+      ingredients: filtered
+    });
+
+    await User.findByIdAndUpdate(userId, {
+      $inc: { recipesGenerated: 1 },
+      $push: { recipes: recipeDoc._id }
+    });
+
+    res.status(200).json({ recipe: recipeDoc });
+  } catch (err) {
+    console.error('[Unhandled Error - OpenAI]', err);
+    res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+};
+
 
 // GET /
 export const getUserRecipes = async (req, res) => {

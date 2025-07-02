@@ -43,7 +43,6 @@ const SignUp = () => {
               <h3 className="text-sm font-medium text-blue-800 mb-2">Sign Up Requirements:</h3>
               <ul className="text-sm text-blue-700 space-y-1 list-disc list-inside">
                 <li>Password must be at least 8 characters long</li>
-                <li>Maximum 3 signup attempts per minute</li>
                 <li>Email must be unique and not already registered</li>
                 <li>You will need to confirm your email after signing up</li>
               </ul>

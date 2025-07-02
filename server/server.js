@@ -9,6 +9,7 @@ import authRoutes from "./routes/auth.route.js"
 import recipeRoutes from "./routes/recipe.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import stripeWebhookRoutes from "./routes/stripeWebhook.js"
+import limiter from "./config/limiter.config.js";
 
 dotenv.config();
 
@@ -25,14 +26,17 @@ app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUniniti
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use('/api/v1/payment', paymentRoutes);
 
-app.get('/', (req, res)=> {
+app.use(limiter)
+app.use('/api/v1/recipes', recipeRoutes);
+app.use('/api/v1/auth', authRoutes);
+
+
+app.get('/', limiter,(req, res)=> {
     res.send("Welcome to Baraka Bites")
 })
 
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/recipes', recipeRoutes);
-app.use('/api/v1/payment', paymentRoutes);
 
 app.listen(PORT, async ()=>{ 
     console.log(`Server running on port http://localhost:${PORT}`)

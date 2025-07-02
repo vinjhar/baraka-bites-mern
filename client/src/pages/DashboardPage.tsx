@@ -133,7 +133,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-lg text-gray-700 mb-4">
               You've used all your free recipe generations.
             </p>
-            <button className="bg-gold text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition">
+            <button onClick={()=>navigate('/billing')} className="bg-gold text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition">
               Upgrade to Premium
             </button>
           </div>

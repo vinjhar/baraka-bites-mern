@@ -15,10 +15,9 @@ async function withAuth(endpoint: string, options: RequestInit = {}) {
   if (!res.ok) throw { status: res.status, ...data };
   return data;
 }
-
-export function generateRecipe(body: any) {
-  return withAuth('/generate', { method: 'POST', body: JSON.stringify(body) });
-}
+// export function generateRecipe(body: any) {
+//   return withAuth('/generate-openai', { method: 'POST', body: JSON.stringify(body) });
+// }
 
 export function getUserRecipes() {
   return withAuth('/', { method: 'GET' });

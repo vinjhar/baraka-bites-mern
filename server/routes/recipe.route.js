@@ -5,7 +5,8 @@ import {
     generateRecipe,
     getUserRecipes,
     getRecipeById,
-    deleteRecipeById
+    deleteRecipeById,
+    generateRecipeWithOpenAI
  } from '../controllers/recipe.controller.js';
 
 
@@ -19,16 +20,19 @@ router.get('/test', (req, res)=> {
     res.send("The Route is Protected and working fine.")
 })
 
-// Generate a new recipe (check subscription)
+
 router.post('/generate', checkSubscription, generateRecipe);
+
+// POST /generate-openai
+router.post('/generate-openai',checkSubscription, generateRecipeWithOpenAI)
 
 // Get all recipes for logged-in user
 router.get('/', getUserRecipes);
 
-// Get a single recipe by ID
+
 router.get('/:id', getRecipeById);
 
-// Delete a recipe
+
 router.delete('/:id', deleteRecipeById);
 
 export default router;

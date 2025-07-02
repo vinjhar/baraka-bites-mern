@@ -1,28 +1,68 @@
-import { useState } from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Loader2, Sparkles, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 type Props = {
   onSuccess?: (recipe: any) => void;
 };
 
-const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
+const ALL_MEAL_TYPES = [
+  "Suhoor (Pre-Dawn)",
+  "Iftar (Post-Sunset)",
+  "Light Meals",
+  "Main Meals",
+  "Dessert",
+  "Snack",
+  "Healthy Snacks"
+];
+
+const FREE_MEAL_TYPES = [
+  "Main Meals",
+  "Light Meals",
+  "Snack"
+];
+
+const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
   const [ingredients, setIngredients] = useState('');
   const [mealType, setMealType] = useState('Main Meals');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | JSX.Element>('');
-  const [recipe, setRecipe] = useState<any>(null); // store response recipe
+  const [recipe, setRecipe] = useState<any>(null);
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+
+  // Fetch user info
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('http://localhost:7001/api/v1/auth/me', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const data = await res.json();
+        setIsPremium(data?.user?.isPremium || false);
+      } catch (err) {
+        console.error("Failed to fetch user info", err);
+      }
+    };
+
+    if (token) fetchUser();
+  }, [token]);
 
   const handleIngredientsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setIngredients(e.target.value);
   };
 
   const handleMealTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setMealType(e.target.value);
+    const selected = e.target.value;
+    if (!isPremium && !FREE_MEAL_TYPES.includes(selected)) {
+      return; // Prevent selection if not allowed
+    }
+    setMealType(selected);
   };
-
-  const token = localStorage.getItem('token'); // ⬅️ Your stored JWT token
-  const isAuthenticated = !!token;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +77,7 @@ const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
     }
 
     try {
-      const res = await fetch('http://localhost:7001/api/v1/recipes/generate', {
+      const res = await fetch('http://localhost:7001/api/v1/recipes/generate-openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -56,7 +96,7 @@ const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
           setError(
             <>
               You've reached your limit.{' '}
-              <Link to="/pricing" className="text-primary hover:text-gold underline">
+              <Link to="/billing" className="text-primary hover:text-gold underline">
                 Upgrade to premium
               </Link>{' '}
               for unlimited recipes.
@@ -70,8 +110,7 @@ const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
       }
 
       setRecipe(data.recipe);
-      onSuccess?.(data.recipe)
-
+      onSuccess?.(data.recipe);
 
     } catch (err: any) {
       console.error('Error generating recipe:', err);
@@ -113,11 +152,15 @@ const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
             onChange={handleMealTypeChange}
             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 transition-shadow duration-200"
           >
-            <option value="Suhoor (Pre-Dawn)">Suhoor (Pre-Dawn)</option>
-            <option value="Iftar (Post-Sunset)">Iftar (Post-Sunset)</option>
-            <option value="Light Meals">Light Meals</option>
-            <option value="Main Meals">Main Meals</option>
-            <option value="Healthy Snacks">Healthy Snacks</option>
+            {ALL_MEAL_TYPES.map((type) => (
+              <option
+                key={type}
+                value={type}
+                disabled={!isPremium && !FREE_MEAL_TYPES.includes(type)}
+              >
+                {type} {!isPremium && !FREE_MEAL_TYPES.includes(type) ? ' — Premium only 🔒' : ''}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -156,7 +199,6 @@ const RecipeGenerator: React.FC<Props> = ({onSuccess }) => {
         )}
       </form>
 
-      {/* Display Generated Recipe */}
       {recipe && (
         <div className="mt-8 border-t pt-6">
           <h3 className="text-xl font-bold text-primary mb-2">{recipe.title}</h3>

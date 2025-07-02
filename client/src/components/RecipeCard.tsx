@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Share2,
@@ -10,6 +10,7 @@ import {
   Clock,
   X,
   Trash2,
+  Loader2
 } from "lucide-react";
 import { deleteRecipe } from "../api/recipes"; // adjust path as needed
 
@@ -42,23 +43,46 @@ interface Recipe {
 
 interface Props {
   recipe: Recipe;
-  onDelete?: (id: string) => void; 
+  onDelete?: (id: string) => void;
 }
 
 const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
   const [shareMenuOpen, setShareMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const location = useLocation(); 
+  const [isSharing, setIsSharing] = useState(false);
+  const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
+  const shareMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const randomTip = MINDFUL_TIPS[Math.floor(Math.random() * MINDFUL_TIPS.length)];
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        shareMenuRef.current &&
+        !shareMenuRef.current.contains(event.target as Node)
+      ) {
+        setShareMenuOpen(false);
+      }
+    }
+
+    if (shareMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [shareMenuOpen]);
+
   const formattedDate = recipe.createdAt
     ? new Date(recipe.createdAt).toLocaleString("en-US", {
         dateStyle: "medium",
         timeStyle: "short",
       })
     : null;
+
+  const websiteUrl = "https://www.Baraka-Bites.com.pk";
+  const recipeText = `🍽️ ${recipe.title}\n\n📝 ${recipe.description}\n\n🥘 Ingredients:\n${recipe.ingredients?.map(i => `• ${i}`).join('\n')}\n\n👨‍🍳 Instructions:\n${recipe.instructions?.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}\n\n⏱️ Prep Time: ${recipe.prepTime} | Cook Time: ${recipe.cookTime}\n\nView more at ${websiteUrl}`;
 
   const handleDelete = async () => {
     if (!recipe._id) return;
@@ -75,6 +99,47 @@ const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
       setDeleting(false);
     }
   };
+
+  const handleShareOption = (option: string) => {
+    setShareMenuOpen(false);
+    setIsSharing(true);
+    const encodedText = encodeURIComponent(recipeText);
+
+    switch (option) {
+      case 'whatsapp':
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const whatsappUrl = isMobile
+          ? `whatsapp://send?text=${encodedText}`
+          : `https://web.whatsapp.com/send?text=${encodedText}`;
+        window.open(whatsappUrl, '_blank');
+        break;
+      case 'facebook':
+        window.open(
+          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(websiteUrl)}`,
+          '_blank',
+          'noopener,noreferrer,width=600,height=400'
+        );
+        break;
+      case 'twitter':
+        window.open(
+          `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodeURIComponent(websiteUrl)}`,
+          '_blank'
+        );
+        break;
+      case 'email':
+        window.location.href = `mailto:?subject=${encodeURIComponent('Check out this recipe: ' + recipe.title)}&body=${encodedText}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(recipeText)
+          .then(() => alert('Recipe copied to clipboard!'))
+          .catch(() => alert('Copy failed. Please try manually.'));
+        break;
+    }
+
+    setIsSharing(false);
+  };
+
+  const randomTip = MINDFUL_TIPS[Math.floor(Math.random() * MINDFUL_TIPS.length)];
 
   if (!recipe || typeof recipe !== 'object') {
     return (
@@ -95,24 +160,51 @@ const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
 
           <div className="flex justify-between items-start mb-4">
             <h3 className="text-xl font-bold text-primary">{recipe.title || "Untitled Recipe"}</h3>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShareMenuOpen((prev) => !prev)}
-                className={`bg-primary/5 p-2 rounded-full hover:bg-primary/10 transition-all duration-200 hover:scale-105 ${
-                  shareMenuOpen ? "ring-2 ring-primary" : ""
-                }`}
-                title="Share recipe"
-              >
-                <Share2 className="w-5 h-5 text-primary" />
-              </button>
-             { isDashboard && <button
-                onClick={handleDelete}
-                className="bg-red-50 p-2 rounded-full hover:bg-red-100 transition-all"
-                title="Delete recipe"
-                disabled={deleting}
-              >
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </button>}
+            <div className="flex items-center gap-2 relative">
+              <div className="relative">
+                <button
+                  onClick={() => setShareMenuOpen(prev => !prev)}
+                  className={`bg-primary/5 p-2 rounded-full hover:bg-primary/10 transition-all duration-200 hover:scale-105 ${shareMenuOpen ? 'ring-2 ring-primary' : ''}`}
+                  title="Share recipe"
+                  disabled={isSharing}
+                >
+                  {isSharing ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : <Share2 className="w-5 h-5 text-primary" />}
+                </button>
+
+                {shareMenuOpen && (
+                  <div
+                    ref={shareMenuRef}
+                    className="absolute top-full right-0 mt-2 w-52 bg-white border border-gray-300 rounded-lg shadow-lg z-50 p-2 space-y-1"
+                  >
+                    <button onClick={() => handleShareOption('whatsapp')} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded-md">
+                      <MessageCircle className="w-5 h-5 text-green-500" /> WhatsApp
+                    </button>
+                    <button onClick={() => handleShareOption('facebook')} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded-md">
+                      <Facebook className="w-5 h-5 text-blue-600" /> Facebook
+                    </button>
+                    <button onClick={() => handleShareOption('twitter')} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded-md">
+                      <Twitter className="w-5 h-5 text-sky-400" /> Twitter
+                    </button>
+                    <button onClick={() => handleShareOption('email')} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded-md">
+                      <Mail className="w-5 h-5 text-red-600" /> Email
+                    </button>
+                    <button onClick={() => handleShareOption('copy')} className="flex items-center gap-2 w-full text-left px-3 py-1.5 hover:bg-primary/10 rounded-md">
+                      <Copy className="w-5 h-5 text-gray-600" /> Copy to Clipboard
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {isDashboard && (
+                <button
+                  onClick={handleDelete}
+                  className="bg-red-50 p-2 rounded-full hover:bg-red-100 transition-all"
+                  title="Delete recipe"
+                  disabled={deleting}
+                >
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                </button>
+              )}
             </div>
           </div>
 
