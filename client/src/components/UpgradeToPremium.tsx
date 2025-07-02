@@ -31,14 +31,14 @@ const UpgradeToPremium: React.FC<Props> = ({ isAuthenticated, isSubscribed }) =>
       resetState();
       setIsLoading(true);
 
-      const res = await fetch('http://localhost:7001/api/v1/stripe/create-checkout-session', {
+      const res = await fetch('http://localhost:7001/api/v1/payment/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          priceId: STRIPE_PRODUCTS.PREMIUM.priceId
+          priceId: 'price_1RgBMBC1TUee5AwtLKuvteIn'
         })
       });
 

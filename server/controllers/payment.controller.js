@@ -13,10 +13,23 @@ export const createCheckoutSession = async (req, res) => {
   }
 
   try {
-    
+    const user = req.user;
+
+    // If user doesn't have a Stripe customer ID, create one
+    if (!user.stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+      });
+
+      user.stripeCustomerId = customer.id;
+      await user.save();
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
-      mode, // either 'payment' or 'subscription'
+      mode,
+      customer: user.stripeCustomerId, // ✅ attach existing or new customer
       line_items: [
         {
           price: priceId,
@@ -31,5 +44,29 @@ export const createCheckoutSession = async (req, res) => {
   } catch (error) {
     console.error('Stripe session error:', error.message);
     return res.status(500).json({ error: 'Failed to create Stripe checkout session' });
+  }
+};
+
+export const cancelSubscription = async (req, res) => {
+  const user = req.user;
+
+  if (!user.stripeSubscriptionId) {
+    return res.status(400).json({ error: 'No active subscription found.' });
+  }
+
+  try {
+    // Cancel subscription on Stripe
+    console.log('Attempting to cancel subscription:', user.stripeSubscriptionId);
+    await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+
+    // Update user in DB
+    user.isPremium = false;
+    user.stripeSubscriptionId = null;
+    await user.save();
+
+    return res.status(200).json({ message: 'Subscription cancelled successfully.' });
+  } catch (error) {
+    console.error('Subscription cancellation failed:', error.message);
+    return res.status(500).json({ error: 'Failed to cancel subscription.' });
   }
 };

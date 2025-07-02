@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema({
   
   recipes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Recipe' }],
   isPremium: { type: Boolean, default: false },
+
+  stripeCustomerId: String,
+  stripeSubscriptionId: String,
+ 
 }, { timestamps: true });
 
 export default mongoose.model('User', userSchema);
