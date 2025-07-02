@@ -1,33 +1,19 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const SubscriptionManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleManageSubscription = async () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      const res = await fetch('http://localhost:7001/api/v1/stripe/manage-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+    navigate('/billing')
 
-      const { url } = await res.json();
-
-      if (!url) throw new Error('No portal URL received.');
-      window.location.href = url;
-    } catch (err: any) {
-      setError('Unable to manage subscription. Try again.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
+    
   };
 
   return (

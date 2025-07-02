@@ -14,38 +14,44 @@ const DashboardPage: React.FC = () => {
   const upgradeRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
+ useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    navigate('/SignIn');
+    return;
+  }
 
-    if (!token) {
-      navigate('/SignIn')
-      return;
-    }
-
+  const fetchUser = async () => {
     try {
-      const user = JSON.parse(userData);
-      const generations_left = Math.max(3 - user.recipesGenerated, 0);
-
-      console.log(`Recipe Generated ${user.RecipeGenerator}`) //
-      console.log(`Recipe Generated ${user.RecipeGenerator}`) //
-      
-
-      setUserInfo({
-        generations_left,
-        isPremium: user.isPremium,
-        name: user.name,
+      const res = await fetch(`http://localhost:7001/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
+      const data = await res.json();
 
-      getUserRecipes().then((res) => {
-        setRecipes(res.recipes || []);
-      }).catch(() => {
-        console.error('Error fetching user recipes');
-      });
+      if (res.ok && data.user) {
+        const generations_left = Math.max(3 - data.user.recipesGenerated, 0);
+
+        setUserInfo({
+          generations_left,
+          isPremium: data.user.isPremium,
+          name: data.user.name,
+        });
+
+        // (optional) Update localStorage if needed elsewhere
+        localStorage.setItem('user', JSON.stringify(data.user));
+      } else {
+        navigate('/SignIn');
+      }
+
+      const recipeRes = await getUserRecipes();
+      setRecipes(recipeRes.recipes || []);
     } catch (err) {
-      console.error('Invalid user data in localStorage');
+      console.error('Failed to fetch user data', err);
     }
-  }, []);
+  };
+
+  fetchUser();
+}, []);
 
   const isSubscribed = userInfo?.isPremium ?? false;
 

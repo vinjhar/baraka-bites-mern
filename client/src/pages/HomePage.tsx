@@ -9,9 +9,23 @@ import { Utensils, Database, BookMarked, Medal, Search, Clock } from 'lucide-rea
 
 const HomePage: React.FC = () => {
   const [generatedRecipes, setGeneratedRecipes] = useState<any[]>([]); // Store real recipe objects
-
+  const [isPremium, setIsPremium] = useState(false)
   useEffect(() => {
     document.title = 'Baraka Bites - Halal Recipe AI Platform';
+
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('http://localhost:7001/api/v1/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.user?.isPremium) setIsPremium(true);
+        })
+        .catch((err) => {
+          console.error('Failed to load user info:', err);
+        });
+    }
   }, []);
 
   const handleRecipeSuccess = (newRecipe: any) => {
@@ -145,6 +159,7 @@ const HomePage: React.FC = () => {
               ]}
               priceId={STRIPE_PRODUCTS.PREMIUM.priceId}
               mode={STRIPE_PRODUCTS.PREMIUM.mode}
+              isPremium={isPremium}
               isHighlighted={true}
             />
           </div>

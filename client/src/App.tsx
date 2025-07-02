@@ -16,8 +16,6 @@ import DashboardPage from './pages/DashboardPage';
 import ContactPage from './pages/ContactPage';
 import SunnahFoodsPage from './pages/SunnahFoodsPage';
 import BlogPage from './pages/BlogPage';
-import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
-import CheckoutCancelPage from './pages/CheckoutCancelPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPage from './pages/PrivacyPage';
 import EmailConfirmationPage from './pages/EmailConfirmationPage';
@@ -30,6 +28,7 @@ import GoogleCallback from './components/GoogleCallback';
 import ResendVerificationPage from './pages/ResendVerificationPage';
 import EmailVerified from './pages/EmailVerified';
 import PaymentSuccess from './pages/PaymentSuccess';
+import BillingPage from './pages/BillingPage';
 
 
 const App = () => {
@@ -51,6 +50,8 @@ const App = () => {
               <Route path="/resend-verification" element={<ResendVerificationPage />} />
               <Route path="/email-verified" element={<EmailVerified />} />
               <Route path="/auth/google/callback" element={<GoogleCallback />} />
+              
+              <Route path="/billing" element={<BillingPage />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/dashboard" element={
              
@@ -60,12 +61,8 @@ const App = () => {
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/sunnah-foods" element={<SunnahFoodsPage />} />
               <Route path="/blog" element={<BlogPage />} />
-              <Route path="/checkout/success" element={
-                
-                  <CheckoutSuccessPage />
-                
-              } />
-              <Route path="/checkout/cancel" element={<CheckoutCancelPage />} />
+              
+            
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />
             </Routes>

@@ -1,59 +1,84 @@
-import React, { useState, useCallback } from 'react';
-import { STRIPE_PRODUCTS } from '../stripe-config';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface Props {
-  isAuthenticated: boolean;
-  isSubscribed: boolean;
-}
-
-const UpgradeToPremium: React.FC<Props> = ({ isAuthenticated, isSubscribed }) => {
+const UpgradeToPremium: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (!token) {
+        setIsAuthenticated(false);
+        setIsFetching(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`http://localhost:7001/api/v1/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (res.ok && data.user) {
+          setIsAuthenticated(true);
+          setIsSubscribed(data.user.isPremium || false);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Failed to check user status', err);
+        setIsAuthenticated(false);
+      } finally {
+        setIsFetching(false);
+      }
+    };
+
+    checkAuth();
+  }, [token]);
+
   const resetState = useCallback(() => {
-    setIsLoading(false);
     setError(null);
+    setIsLoading(false);
   }, []);
 
   const handleUpgrade = async () => {
+    resetState();
+
+    if (!isAuthenticated) {
+      navigate('/signin');
+      return;
+    }
+
     if (isSubscribed) {
       setError('You are already subscribed to Premium.');
       return;
     }
 
-    if (!isAuthenticated) {
-      window.location.href = '/signin';
-      return;
-    }
-
+    setIsLoading(true);
     try {
-      resetState();
-      setIsLoading(true);
-
-      const res = await fetch('http://localhost:7001/api/v1/payment/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({
-          priceId: 'price_1RgBMBC1TUee5AwtLKuvteIn'
-        })
-      });
-
-      const { url } = await res.json();
-
-      if (!url) throw new Error('No checkout URL returned.');
-
-      window.location.href = url;
-    } catch (err: any) {
-      setError('Upgrade failed. Please try again or contact support.');
-      console.error(err);
+      navigate('/billing');
+    } catch (err) {
+      setError('Upgrade failed. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isFetching) {
+    return (
+      <div className="flex justify-center items-center h-32">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-primary/10">

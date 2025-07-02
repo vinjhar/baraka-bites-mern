@@ -1,9 +1,6 @@
-import React, { useState } from 'react';
-import { Check, Loader2 } from 'lucide-react';
-import { loadStripe } from '@stripe/stripe-js';
-import axios from 'axios';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!); // Make sure you define this in .env
+import React from 'react';
+import { Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type PricingCardProps = {
   title: string;
@@ -13,6 +10,7 @@ type PricingCardProps = {
   priceId: string | null;
   mode: 'payment' | 'subscription';
   isHighlighted?: boolean;
+  isPremium: boolean; // 👈 passed from HomePage
 };
 
 const PricingCard: React.FC<PricingCardProps> = ({
@@ -23,39 +21,24 @@ const PricingCard: React.FC<PricingCardProps> = ({
   priceId,
   mode,
   isHighlighted = false,
+  isPremium,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
+  const navigate = useNavigate();
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
 
-  const handleCheckout = async () => {
-    if (!priceId || !isAuthenticated) return;
+  console.log(isPremium)
 
-    try {
-      setIsLoading(true);
-      const { data } = await axios.post(
-        'http://localhost:7001/api/v1/payment/create-checkout-session',
-        {
-          priceId,
-          mode,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  // Determine current plan
+  const isCurrentPlan =
+    (!isPremium && title.toLowerCase() === 'free') ||
+    (isPremium && title.toLowerCase() === 'premium');
 
-      const stripe = await stripePromise;
-      if (stripe) {
-        await stripe.redirectToCheckout({ sessionId: data.id });
-      }
-    } catch (err) {
-      console.error('Stripe Checkout error:', err);
-      alert('Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
+  const handleRedirect = () => {
+    if (!isAuthenticated) {
+      window.location.href = '/signin';
+    } else {
+      navigate('/billing');
     }
   };
 
@@ -92,26 +75,15 @@ const PricingCard: React.FC<PricingCardProps> = ({
         </ul>
 
         <button
-          onClick={handleCheckout}
-          disabled={isLoading || !priceId}
+          onClick={handleRedirect}
+          disabled={isCurrentPlan}
           className={`w-full flex justify-center items-center py-3 px-4 rounded-md font-medium transition-all duration-200 
             ${isHighlighted
               ? 'bg-gold text-primary hover:bg-gold/90'
               : 'bg-primary text-white hover:bg-primary/90'}
-            ${(isLoading || !priceId) ? 'opacity-75 cursor-not-allowed' : ''}`}
+            ${isCurrentPlan ? 'opacity-75 cursor-not-allowed' : ''}`}
         >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Processing...
-            </>
-          ) : (
-            !priceId
-              ? 'Current Plan'
-              : isAuthenticated
-              ? 'Upgrade Now'
-              : 'Sign In to Upgrade'
-          )}
+          {isCurrentPlan ? 'Already Subscribed' : 'Upgrade Now'}
         </button>
       </div>
     </div>
