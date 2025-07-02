@@ -133,35 +133,35 @@ const HomePage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <PricingCard
-              title={STRIPE_PRODUCTS.FREE.name}
-              price="£0"
-              description={STRIPE_PRODUCTS.FREE.description}
-              features={[
-                '3 recipe generations total',
-                'Access to basic recipes',
-                'Halal ingredient verification',
-                'Email support'
-              ]}
-              priceId={STRIPE_PRODUCTS.FREE.priceId}
-              mode={STRIPE_PRODUCTS.FREE.mode}
-            />
-            <PricingCard
-              title={STRIPE_PRODUCTS.PREMIUM.name}
-              price="£4.99"
-              description={STRIPE_PRODUCTS.PREMIUM.description}
-              features={[
-                'Unlimited recipe generations',
-                'Save favorite recipes',
-                'Advanced cooking techniques',
-                'Priority support',
-                'Downloadable du\'a PDF book',
-                '10% of proceeds donated to charity'
-              ]}
-              priceId={STRIPE_PRODUCTS.PREMIUM.priceId}
-              mode={STRIPE_PRODUCTS.PREMIUM.mode}
-              isPremium={isPremium}
-              isHighlighted={true}
-            />
+  title={STRIPE_PRODUCTS.FREE.name}
+  price="£0"
+  description={STRIPE_PRODUCTS.FREE.description}
+  features={[
+    '3 recipe generations total',
+    'Access to basic recipes',
+    'Halal ingredient verification',
+    'Email support',
+  ]}
+  mode={STRIPE_PRODUCTS.FREE.mode}
+  isPremium={isPremium}
+/>
+
+<PricingCard
+  title={STRIPE_PRODUCTS.PREMIUM.name}
+  price="£4.99"
+  description={STRIPE_PRODUCTS.PREMIUM.description}
+  features={[
+    'Unlimited recipe generations',
+    'Save favorite recipes',
+    'Advanced cooking techniques',
+    'Priority support',
+    "Downloadable du'a PDF book",
+    '10% of proceeds donated to charity',
+  ]}
+  mode={STRIPE_PRODUCTS.PREMIUM.mode}
+  isHighlighted={true}
+  isPremium={isPremium}
+/>
           </div>
         </div>
       </section>

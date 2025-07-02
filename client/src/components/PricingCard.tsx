@@ -7,10 +7,9 @@ type PricingCardProps = {
   price: string;
   description: string;
   features: string[];
-  priceId: string | null;
   mode: 'payment' | 'subscription';
   isHighlighted?: boolean;
-  isPremium: boolean; // 👈 passed from HomePage
+  isPremium: boolean;
 };
 
 const PricingCard: React.FC<PricingCardProps> = ({
@@ -18,7 +17,6 @@ const PricingCard: React.FC<PricingCardProps> = ({
   price,
   description,
   features,
-  priceId,
   mode,
   isHighlighted = false,
   isPremium,
@@ -27,25 +25,37 @@ const PricingCard: React.FC<PricingCardProps> = ({
   const token = localStorage.getItem('token');
   const isAuthenticated = !!token;
 
-  console.log(isPremium)
+  const isFreePlan = title.toLowerCase().includes('free');
+  let buttonText = 'Change Plan';
+  let isDisabled = false;
 
-  // Determine current plan
-  const isCurrentPlan =
-    (!isPremium && title.toLowerCase() === 'free') ||
-    (isPremium && title.toLowerCase() === 'premium');
+  if (!isAuthenticated) {
+    buttonText = 'Sign In to Continue';
+  } else {
+    if (!isPremium && isFreePlan) {
+      buttonText = 'Current Plan';
+      isDisabled = true;
+    } else if (isPremium && !isFreePlan) {
+      buttonText = 'Already Subscribed';
+      isDisabled = true;
+    }
+  }
 
-  const handleRedirect = () => {
+  const handleClick = () => {
     if (!isAuthenticated) {
-      window.location.href = '/signin';
-    } else {
+      navigate('/signin');
+      return;
+    }
+
+    if (!isDisabled) {
       navigate('/billing');
     }
   };
 
   return (
     <div
-      className={`rounded-lg shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg 
-        ${isHighlighted ? 'border-2 border-gold scale-105 relative' : 'border border-primary/10'}`}
+      className={`rounded-xl shadow-md overflow-hidden transition-transform duration-300 hover:shadow-lg
+        ${isHighlighted ? 'border-2 border-gold scale-105 relative' : 'border border-gray-200'}`}
     >
       {isHighlighted && (
         <div className="bg-gold text-primary text-center py-1 font-semibold">
@@ -53,37 +63,37 @@ const PricingCard: React.FC<PricingCardProps> = ({
         </div>
       )}
 
-      <div className="p-6 bg-white">
-        <h3 className="text-xl font-bold mb-2 text-primary">{title}</h3>
+      <div className="p-6 bg-white h-full">
+        <h3 className="text-xl font-bold text-primary mb-2">{title}</h3>
 
         <div className="mb-4">
           <span className="text-3xl font-bold text-primary">{price}</span>
           {mode === 'subscription' && (
-            <span className="text-gray-500 ml-1">/month</span>
+            <span className="text-gray-500 ml-1 text-base">/month</span>
           )}
         </div>
 
-        <p className="text-gray-700 mb-6">{description}</p>
+        <p className="text-gray-600 mb-6">{description}</p>
 
         <ul className="space-y-3 mb-8">
           {features.map((feature, index) => (
             <li key={index} className="flex items-start">
               <Check className={`w-5 h-5 mr-2 mt-0.5 ${isHighlighted ? 'text-gold' : 'text-primary'}`} />
-              <span className="text-gray-700">{feature}</span>
+              <span className="text-gray-800">{feature}</span>
             </li>
           ))}
         </ul>
 
         <button
-          onClick={handleRedirect}
-          disabled={isCurrentPlan}
-          className={`w-full flex justify-center items-center py-3 px-4 rounded-md font-medium transition-all duration-200 
-            ${isHighlighted
-              ? 'bg-gold text-primary hover:bg-gold/90'
-              : 'bg-primary text-white hover:bg-primary/90'}
-            ${isCurrentPlan ? 'opacity-75 cursor-not-allowed' : ''}`}
+          onClick={handleClick}
+          disabled={isAuthenticated && isDisabled}
+          className={`w-full py-3 px-4 rounded-md font-medium transition-colors duration-200 
+            ${isHighlighted 
+              ? 'bg-gold text-primary hover:bg-gold/90' 
+              : 'bg-primary text-white hover:bg-primary/90'} 
+            ${isAuthenticated && isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
         >
-          {isCurrentPlan ? 'Already Subscribed' : 'Upgrade Now'}
+          {buttonText}
         </button>
       </div>
     </div>
