@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer';
 export const sendVerificationEmail = async (email, token) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: "smtp.gmail.com",
       port: 587,
       secure: false,
       auth: {
@@ -35,7 +35,7 @@ export const sendVerificationEmail = async (email, token) => {
 export const sendResetPasswordEmail = async (email, token) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: "smtp.gmail.com",
       port: 587,
       secure: false,
       auth: {
