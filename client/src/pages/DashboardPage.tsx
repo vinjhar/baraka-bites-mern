@@ -5,8 +5,9 @@ import { getUserRecipes } from '../api/recipes';
 import SubscriptionManager from '../components/SubscriptionManager';
 import UpgradeToPremium from '../components/UpgradeToPremium';
 import SavedRecipesHero from '../components/SavedRecipesHero';
-import { Crown, Utensils, Search } from 'lucide-react';
+import { Crown, Utensils } from 'lucide-react';
 import { useNavigate} from 'react-router-dom';
+import ResetDate from '../components/ResetDate';
 
 const DashboardPage: React.FC = () => {
   const [userInfo, setUserInfo] = useState<{ generations_left: number; isPremium: boolean; name: string } | null>(null);
@@ -96,6 +97,7 @@ const DashboardPage: React.FC = () => {
             <p className="text-gray-500 text-sm mt-1">
               {isSubscribed ? 'Unlimited recipes' : 'Generations remaining'}
             </p>
+            <ResetDate />
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6 border border-primary/10">

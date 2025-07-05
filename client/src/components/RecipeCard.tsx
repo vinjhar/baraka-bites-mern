@@ -12,7 +12,7 @@ import {
   Trash2,
   Loader2
 } from "lucide-react";
-import { deleteRecipe } from "../api/recipes"; // adjust path as needed
+import { deleteRecipe } from "../api/recipes"; 
 
 const sunnahIngredients = [
   'dates', 'honey', 'barley', 'cucumber', 'watermelon', 'black seed',

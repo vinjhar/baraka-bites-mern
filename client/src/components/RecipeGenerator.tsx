@@ -77,7 +77,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
     }
 
     try {
-      const res = await fetch('http://localhost:7001/api/v1/recipes/generate-openai', {
+      const res = await fetch('http://localhost:7001/api/v1/recipes/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

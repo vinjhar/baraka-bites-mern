@@ -145,3 +145,22 @@ export const resetPassword = async (req, res) => {
 
   res.status(200).json({ message: 'Password has been reset successfully' });
 };
+
+export const getMe = async (req, res) => {
+  try {
+    
+    const user = await User.findById(req.user._id).select('-password');
+
+    const resetDate = user.recipesGeneratedResetAt || new Date();
+    const nextResetDate = new Date(resetDate);
+    nextResetDate.setMonth(nextResetDate.getMonth() + 1);
+
+    res.status(200).json({
+      user,
+      nextResetDate: nextResetDate.toISOString()
+    })
+
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch user data' });
+  }
+} 

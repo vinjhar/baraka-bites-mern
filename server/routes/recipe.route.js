@@ -16,17 +16,13 @@ const router = express.Router();
 
 router.use(isAuthenticated); 
 
-router.get('/test', (req, res)=> {
-    res.send("The Route is Protected and working fine.")
-})
-
 
 router.post('/generate', checkSubscription, generateRecipe);
 
 // POST /generate-openai
 router.post('/generate-openai',checkSubscription, generateRecipeWithOpenAI)
 
-// Get all recipes for logged-in user
+
 router.get('/', getUserRecipes);
 
 
