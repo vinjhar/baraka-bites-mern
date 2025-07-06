@@ -97,7 +97,8 @@ const DashboardPage: React.FC = () => {
             <p className="text-gray-500 text-sm mt-1">
               {isSubscribed ? 'Unlimited recipes' : 'Generations remaining'}
             </p>
-            <ResetDate />
+            { !isSubscribed ? <div><ResetDate /></div> : null}
+
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6 border border-primary/10">

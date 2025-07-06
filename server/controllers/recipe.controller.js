@@ -10,9 +10,8 @@ const HARAM_INGREDIENTS = [
 
 // POST /generate
 export const generateRecipe = async (req, res) => {
-  const { ingredients, mealType } = req.body;
+  const { ingredients, mealType, servingSize, spiceLevel, cuisine, healthGoals, avoid } = req.body;
   const userId = req.user._id;
-  console.log(userId)
 
   if (!ingredients || !Array.isArray(ingredients) || !mealType || !userId) {
     return res.status(400).json({ error: 'Missing or invalid fields: ingredients, mealType required.' });
@@ -26,29 +25,52 @@ export const generateRecipe = async (req, res) => {
     return res.status(400).json({ error: 'All provided ingredients are haram.' });
   }
 
-  const prompt = `
-Create a 100% halal ${mealType} recipe using: ${filtered.join(', ')}.
+  // --- Construct dynamic instruction additions ---
+// --- Construct dynamic instruction additions ---
+let optionalDetails = '';
+if (servingSize) optionalDetails += `\n- The recipe should serve approximately ${servingSize} people.`;
+if (spiceLevel) optionalDetails += `\n- The dish should be ${spiceLevel} in spice level.`;
+if (cuisine) optionalDetails += `\n- The recipe should be inspired by ${cuisine} cuisine.`;
+if (healthGoals) optionalDetails += `\n- Align with these dietary goals: ${healthGoals}.`;
+if (avoid && avoid.length > 0) optionalDetails += `\n- Avoid these ingredients: ${avoid.join(', ')}.`;
 
-CRITICAL REQUIREMENTS:
-  - The recipe MUST be strictly halal
-  - NO pork, alcohol, or any non-halal ingredients
-  - If meat is used, assume it's already halal-certified (don't prefix with "halal")
-  - NO cooking wine or alcohol-based extracts
-  - Use halal substitutes for any non-halal ingredients
-  - Create a unique variation if possible
-  - Only mention "halal" for ingredients that specifically need clarification
-  - Make sure given all measurements for the ingredients used in recipe
+// --- Final Prompt String ---
+const prompt = `
+You are a halal recipe generator.
 
-Format as a JSON object:
+TASK:
+Create a unique, 100% halal ${mealType} recipe using the following ingredients:
+${filtered.join(', ')}
+
+${optionalDetails}
+
+STRICT REQUIREMENTS:
+- The recipe must be fully halal.
+- No pork, alcohol, or non-halal ingredients.
+- Assume meat is halal-certified; do NOT say "halal chicken", just "chicken".
+- Do NOT use alcohol-based extracts or cooking wine.
+- Use halal alternatives for any doubtful ingredients.
+- Include realistic, clear measurements (e.g., 1 tsp cumin, 200g chicken).
+- Provide a calorie estimate for the full recipe or per serving.
+- Suggest relevant tags (e.g., "gluten-free", "vegan", "high-protein", etc.).
+- Format the response as a clean, valid JSON object. No markdown, no explanations, no extra text.
+- Avoid these ingredients: ${avoid.join(', ')}.
+
+FORMAT:
+Respond ONLY with this valid JSON object:
+
 {
-  "title": "...",
-  "description": "...",
-  "ingredients": ["..."],
-  "instructions": ["..."],
-  "prepTime": "...",
-  "cookTime": "..."
+  "title": "Name of the recipe",
+  "description": "1-2 line summary of the dish.",
+  "ingredients": ["List of all ingredients with measurements"],
+  "instructions": ["Step-by-step cooking instructions"],
+  "prepTime": "e.g., 10 minutes",
+  "cookTime": "e.g., 25 minutes",
+  "calories": "e.g., 450 kcal per serving",
+  "tags": ["vegan", "gluten-free", "low-carb"] // max 5 relevant tags
 }
 `;
+
 
   try {
     const response = await fetch(OPENROUTER_API_URL, {
@@ -80,8 +102,6 @@ Format as a JSON object:
       return res.status(500).json({ error: 'Empty content from model.' });
     }
 
-    console.log('🔍 Raw AI Content:', content);
-
     let cleaned = content.trim();
     if (cleaned.startsWith("```json") || cleaned.startsWith("```")) {
       cleaned = cleaned.replace(/^```json|^```/, '').replace(/```$/, '').trim();
@@ -94,16 +114,29 @@ Format as a JSON object:
       return res.status(500).json({ error: 'Failed to parse JSON from model response.' });
     }
 
+    const normalizedOptions = {
+    servingSize,
+    spiceLevel,
+    cuisine,
+    healthGoals,
+    avoid: Array.isArray(avoid) ? avoid : avoid?.split(',').map(a => a.trim()).filter(Boolean)
+    };
+
     const recipeDoc = await Recipe.create({
       ...parsedRecipe,
-      userId: userId,
+      userId,
       mealType,
-      ingredients: filtered
+      ingredients: filtered,
+      options: normalizedOptions
     });
 
-    await User.findByIdAndUpdate(userId, { $inc: { recipesGenerated: 1 }, $push: {recipes:recipeDoc._id} });
+    await User.findByIdAndUpdate(userId, {
+      $inc: { recipesGenerated: 1 },
+      $push: { recipes: recipeDoc._id }
+    });
 
     res.status(200).json({ recipe: recipeDoc });
+
   } catch (err) {
     console.error('[Unhandled Error]', err);
     res.status(500).json({ error: err.message || 'Internal server error' });

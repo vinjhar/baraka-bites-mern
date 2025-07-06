@@ -9,13 +9,15 @@ export const checkSubscription = async (req, res, next) => {
 
   const now = new Date();
   const lastReset = user.recipesGeneratedResetAt || now;
-  const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
 
-  if (lastReset < oneMonthAgo) {
-      user.recipesGenerated = 0;
-      user.recipesGeneratedResetAt = now;
-      await user.save();
-    }
+  const oneMonthLater = new Date(user.recipesGeneratedResetAt || now);
+  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+  if (now > oneMonthLater) {
+    user.recipesGenerated = 0;
+    user.recipesGeneratedResetAt = now;
+    await user.save();
+  }
 
   if (user.isPremium || user.recipesGenerated < 3) {
     return next();

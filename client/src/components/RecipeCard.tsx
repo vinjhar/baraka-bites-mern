@@ -39,6 +39,15 @@ interface Recipe {
   cookTime?: string;
   createdAt?: string;
   updatedAt?: string;
+  calories?: string;
+  tags?: string[];   
+  options?: {
+    servingSize?: number;
+    spiceLevel?: string;
+    cuisine?: string;
+    healthGoals?: string;
+    avoid?: string[] | string;
+  };
 }
 
 interface Props {
@@ -99,6 +108,16 @@ const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
       setDeleting(false);
     }
   };
+
+  const options = recipe.options || {};
+const {
+  servingSize,
+  spiceLevel,
+  cuisine,
+  healthGoals,
+  avoid
+} = options;
+
 
   const handleShareOption = (option: string) => {
     setShareMenuOpen(false);
@@ -302,6 +321,46 @@ const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
             <p className="text-sm text-gray-500 italic mb-2">
               Prep Time: {recipe.prepTime || "N/A"} | Cook Time: {recipe.cookTime || "N/A"}
             </p>
+
+            {recipe.calories && (
+  <p className="text-sm text-gray-800 mb-2">
+    <strong>Calories:</strong> {recipe.calories}
+  </p>
+)}
+
+  {recipe.tags?.length > 0 && (
+    <div className="mb-4">
+      <strong className="block mb-1">Tags:</strong>
+      <div className="flex flex-wrap gap-2">
+        {recipe.tags.map((tag, idx) => (
+          <span
+            key={idx}
+            className="bg-primary/10 text-primary text-xs px-3 py-1 rounded-full capitalize"
+          >
+            {tag}
+          </span>
+        ))}
+      </div>
+    </div>
+  )}
+
+
+            {(servingSize || spiceLevel || cuisine || healthGoals || (avoid && avoid.length > 0)) && (
+  <div className="mb-4">
+    <h4 className="font-semibold mb-2">Personalized Options:</h4>
+    <ul className="list-disc list-inside text-gray-800 space-y-1">
+      {servingSize && <li><strong>Serving Size:</strong> {servingSize} people</li>}
+      {spiceLevel && <li><strong>Spice Level:</strong> {spiceLevel}</li>}
+      {cuisine && <li><strong>Cuisine Inspiration:</strong> {cuisine}</li>}
+      {healthGoals && <li><strong>Health Goals:</strong> {healthGoals}</li>}
+      {avoid && avoid.length > 0 && (
+        <li><strong>Avoid:</strong> {Array.isArray(avoid) ? avoid.join(', ') : avoid}</li>
+      )}
+    </ul>
+  </div>
+)}
+
+            
 
             {formattedDate && (
               <p className="text-xs text-gray-400 italic">
