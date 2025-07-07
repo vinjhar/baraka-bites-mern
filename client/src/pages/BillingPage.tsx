@@ -14,7 +14,7 @@ const BillingPage = () => {
     const fetchStatus = async () => {
       setFetching(true);
       try {
-        const res = await fetch(`http://localhost:7001/api/v1/auth/me`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

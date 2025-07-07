@@ -1,4 +1,4 @@
-export const API_BASE = 'http://localhost:7001/api/v1/recipes';
+export const API_BASE = `${import.meta.env.VITE_API_BASE_URL}/api/v1/recipes`;
 
 async function withAuth(endpoint: string, options: RequestInit = {}) {
   const token = localStorage.getItem('token');
@@ -10,6 +10,7 @@ async function withAuth(endpoint: string, options: RequestInit = {}) {
       Authorization: `Bearer ${token}`,
       ...(options.headers || {})
     }
+    
   });
   const data = await res.json();
   if (!res.ok) throw { status: res.status, ...data };

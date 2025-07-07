@@ -10,8 +10,8 @@ const GoogleCallback = () => {
     const token = query.get('token');
 
     if (token) {
-      // ✅ Optionally: fetch user data from token
-      axios.get('http://localhost:7001/api/v1/auth/me', {
+      
+      axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       }).then((res) => {
         localStorage.setItem('token', token);

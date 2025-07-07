@@ -16,7 +16,7 @@ const HomePage: React.FC = () => {
 
     const token = localStorage.getItem('token');
     if (token) {
-      fetch('http://localhost:7001/api/v1/auth/me', {
+      fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())

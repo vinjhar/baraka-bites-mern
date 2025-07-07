@@ -43,7 +43,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch('http://localhost:7001/api/v1/auth/me', {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
@@ -71,7 +71,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
 
     
     try {
-      const res = await fetch('http://localhost:7001/api/v1/recipes/generate-openai', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/recipes/generate-openai`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
