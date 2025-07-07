@@ -26,7 +26,6 @@ export const generateRecipe = async (req, res) => {
   }
 
   // --- Construct dynamic instruction additions ---
-// --- Construct dynamic instruction additions ---
 let optionalDetails = '';
 if (servingSize) optionalDetails += `\n- The recipe should serve approximately ${servingSize} people.`;
 if (spiceLevel) optionalDetails += `\n- The dish should be ${spiceLevel} in spice level.`;
@@ -34,7 +33,7 @@ if (cuisine) optionalDetails += `\n- The recipe should be inspired by ${cuisine}
 if (healthGoals) optionalDetails += `\n- Align with these dietary goals: ${healthGoals}.`;
 if (avoid && avoid.length > 0) optionalDetails += `\n- Avoid these ingredients: ${avoid.join(', ')}.`;
 
-// --- Final Prompt String ---
+
 const prompt = `
 You are a halal recipe generator.
 
@@ -146,7 +145,7 @@ Respond ONLY with this valid JSON object:
 
 // POST /generate-openai
 export const generateRecipeWithOpenAI = async (req, res) => {
-  const { ingredients, mealType } = req.body;
+  const { ingredients, mealType, servingSize, spiceLevel, cuisine, healthGoals, avoid } = req.body;
   const userId = req.user._id;
 
   if (!ingredients || !Array.isArray(ingredients) || !mealType || !userId) {
@@ -161,29 +160,52 @@ export const generateRecipeWithOpenAI = async (req, res) => {
     return res.status(400).json({ error: 'All provided ingredients are haram.' });
   }
 
-  const prompt = `
-Create a 100% halal ${mealType} recipe using: ${filtered.join(', ')}.
+  // --- Construct dynamic instruction additions ---
+let optionalDetails = '';
+if (servingSize) optionalDetails += `\n- The recipe should serve approximately ${servingSize} people.`;
+if (spiceLevel) optionalDetails += `\n- The dish should be ${spiceLevel} in spice level.`;
+if (cuisine) optionalDetails += `\n- The recipe should be inspired by ${cuisine} cuisine.`;
+if (healthGoals) optionalDetails += `\n- Align with these dietary goals: ${healthGoals}.`;
+if (avoid && avoid.length > 0) optionalDetails += `\n- Avoid these ingredients: ${avoid.join(', ')}.`;
 
-CRITICAL REQUIREMENTS:
-- The recipe MUST be strictly halal
-- NO pork, alcohol, or any non-halal ingredients
-- If meat is used, assume it's already halal-certified (don't prefix with "halal")
-- NO cooking wine or alcohol-based extracts
-- Use halal substitutes for any non-halal ingredients
-- Create a unique variation if possible
-- Only mention "halal" for ingredients that specifically need clarification
-- Make sure given all measurements for the ingredients used in recipe
 
-Respond ONLY in the following JSON format:
+
+const prompt = `
+You are a halal recipe generator.
+
+TASK:
+Create a unique, 100% halal ${mealType} recipe using the following ingredients:
+${filtered.join(', ')}
+
+${optionalDetails}
+
+STRICT REQUIREMENTS:
+- The recipe must be fully halal.
+- No pork, alcohol, or non-halal ingredients.
+- Assume meat is halal-certified; do NOT say "halal chicken", just "chicken".
+- Do NOT use alcohol-based extracts or cooking wine.
+- Use halal alternatives for any doubtful ingredients.
+- Include realistic, clear measurements (e.g., 1 tsp cumin, 200g chicken).
+- Provide a calorie estimate for the full recipe or per serving.
+- Suggest relevant tags (e.g., "gluten-free", "vegan", "high-protein", etc.).
+- Format the response as a clean, valid JSON object. No markdown, no explanations, no extra text.
+- Avoid these ingredients: ${avoid.join(', ')}.
+
+FORMAT:
+Respond ONLY with this valid JSON object:
+
 {
-  "title": "...",
-  "description": "...",
-  "ingredients": ["..."],
-  "instructions": ["..."],
-  "prepTime": "...",
-  "cookTime": "..."
+  "title": "Name of the recipe",
+  "description": "1-2 line summary of the dish.",
+  "ingredients": ["List of all ingredients with measurements"],
+  "instructions": ["Step-by-step cooking instructions"],
+  "prepTime": "e.g., 10 minutes",
+  "cookTime": "e.g., 25 minutes",
+  "calories": "e.g., 450 kcal per serving",
+  "tags": ["vegan", "gluten-free", "low-carb"] // max 5 relevant tags
 }
 `;
+
 
   try {
     const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -227,11 +249,21 @@ Respond ONLY in the following JSON format:
       return res.status(500).json({ error: 'Failed to parse JSON from OpenAI response.' });
     }
 
+     const normalizedOptions = {
+    servingSize,
+    spiceLevel,
+    cuisine,
+    healthGoals,
+    avoid: Array.isArray(avoid) ? avoid : avoid?.split(',').map(a => a.trim()).filter(Boolean)
+    };
+
+
     const recipeDoc = await Recipe.create({
       ...parsedRecipe,
       userId,
       mealType,
-      ingredients: filtered
+      ingredients: filtered,
+      options: normalizedOptions
     });
 
     await User.findByIdAndUpdate(userId, {

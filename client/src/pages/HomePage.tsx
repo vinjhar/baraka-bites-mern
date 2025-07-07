@@ -6,6 +6,7 @@ import RecipeCard from '../components/RecipeCard';
 import PricingCard from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 import { Utensils, Database, BookMarked, Medal, Search, Clock } from 'lucide-react';
+import TestimonialCard from '../components/TestimonialCard';
 
 const HomePage: React.FC = () => {
   const [generatedRecipes, setGeneratedRecipes] = useState<any[]>([]); // Store real recipe objects
@@ -119,6 +120,40 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      <section className="py-16 bg-cream">
+  <div className="container mx-auto px-4">
+    <div className="text-center mb-12">
+      <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">
+        What <span className="text-gold">Users Say</span>
+      </h2>
+      <p className="text-gray-700 max-w-2xl mx-auto">
+        Stories from Users who are discovering and cooking with Baraka Bites.
+      </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <TestimonialCard
+        name="Amina Yusuf"
+        role="Mother & Home Chef"
+        
+        feedback="Baraka Bites has made meal planning so easy for my family! I trust every recipe is 100% halal."
+      />
+      <TestimonialCard
+        name="Hassan Raza"
+        role="Fitness Coach"
+        
+        feedback="I use the health goals filter to generate protein-rich meals for my clients. It’s brilliant!"
+      />
+      <TestimonialCard
+        name="Zahra Karim"
+        role="University Student"
+        
+        feedback="As a student on a budget, I love the ingredient-based recipes. Saves time and money!"
+      />
+    </div>
+  </div>
+</section>
 
       <section className="py-16 bg-cream/50">
         <div className="container mx-auto px-4">
