@@ -3,13 +3,13 @@ import nodemailer from 'nodemailer';
 export const sendVerificationEmail = async (email, token) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_FROM,
         pass: process.env.EMAIL_PASS,
       },
+      logger: true,
+  debug: true,
     });
 
     const verificationLink = `${process.env.API_URL}/api/v1/auth/verify-email/${token}`;
@@ -35,13 +35,13 @@ export const sendVerificationEmail = async (email, token) => {
 export const sendResetPasswordEmail = async (email, token) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      service: 'gmail',
       auth: {
         user: process.env.EMAIL_FROM,
         pass: process.env.EMAIL_PASS,
       },
+      logger: true,
+  debug: true,
     });
 
     const resetLink = `${process.env.CLIENT_URL}/reset-password/${token}`;
