@@ -235,7 +235,6 @@ Respond ONLY with this valid JSON object:
       return res.status(500).json({ error: 'Empty content from OpenAI model.' });
     }
 
-    console.log('🔍 OpenAI Raw Content:', content);
 
     let cleaned = content.trim();
     if (cleaned.startsWith("```json") || cleaned.startsWith("```")) {
