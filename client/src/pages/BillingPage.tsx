@@ -32,7 +32,7 @@ const BillingPage = () => {
     try {
       setLoading(true);
       setMessage('');
-      const priceId = 'price_1RgBMBC1TUee5AwtLKuvteIn';
+      const priceId = 'price_1RQDyAD0gUdxny5mfbZR8KgH';
       await subscribeUser(priceId, token!);
     } catch (error: any) {
       setMessage(error.message);
