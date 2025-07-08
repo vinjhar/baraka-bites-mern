@@ -1,5 +1,5 @@
 export const subscribeUser = async (priceId: string, token: string) => {
-  const res = await fetch(`http://localhost:7001/api/v1/payment/create-checkout-session`, {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payment/create-checkout-session`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ export const subscribeUser = async (priceId: string, token: string) => {
 };
 
 export const cancelSubscription = async (token: string) => {
-  const res = await fetch(`http://localhost:7001/api/v1/payment/cancel-subscription`, {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/payment/cancel-subscription`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   });
