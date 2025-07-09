@@ -36,6 +36,7 @@ export const createCheckoutSession = async (req, res) => {
           quantity: 1,
         },
       ],
+      allow_promotion_codes: true,
       success_url: `${process.env.CLIENT_URL}/payment-success`,
       cancel_url: `${process.env.CLIENT_URL}/pricing`,
     });
