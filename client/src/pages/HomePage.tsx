@@ -7,6 +7,7 @@ import PricingCard from '../components/PricingCard';
 import { STRIPE_PRODUCTS } from '../stripe-config';
 import { Utensils, Database, BookMarked, Medal, Search, Clock } from 'lucide-react';
 import TestimonialCard from '../components/TestimonialCard';
+import DuaSection from '../components/DuaSection';
 
 const HomePage: React.FC = () => {
   const [generatedRecipes, setGeneratedRecipes] = useState<any[]>([]); // Store real recipe objects
@@ -74,6 +75,8 @@ const HomePage: React.FC = () => {
     </div>
   </section>
 )}
+
+<DuaSection />
 
       <section className="py-16 bg-cream">
         <div className="container mx-auto px-4">
