@@ -37,10 +37,13 @@ export const createCheckoutSession = async (req, res) => {
         },
       ],
       allow_promotion_codes: true,
+<<<<<<< HEAD
       metadata: {
         userId: user._id.toString(),
       },
       // Set the success and cancel URLs
+=======
+>>>>>>> client/main
       success_url: `${process.env.CLIENT_URL}/payment-success`,
       cancel_url: `${process.env.CLIENT_URL}/pricing`,
     });
