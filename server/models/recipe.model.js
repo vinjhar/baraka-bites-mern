@@ -35,21 +35,25 @@ const recipeSchema = new mongoose.Schema({
     enum: ['Main Meals', 'Light Meals', 'Snack', 'Dessert', 'Suhoor (Pre-Dawn)', 'Iftar (Post-Sunset)', 'Healthy Snacks'],
     default: 'Other'
   },
+  calories:{
+    type: String,
+    required: false
+  },
   options: {
     servingSize: {
-      type: String // e.g., "2 people", "4 servings"
+      type: String 
     },
     spiceLevel: {
       type: String,
     },
     cuisine: {
-      type: String // e.g., "Pakistani", "Italian", etc.
+      type: String 
     },
     healthGoals: {
       type: String
     },
     avoid: {
-      type: [String] // e.g., ["Gluten", "Garlic"]
+      type: [String] 
     }
   },
 }, { timestamps: true });
