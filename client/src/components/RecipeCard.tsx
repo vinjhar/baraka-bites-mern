@@ -90,7 +90,7 @@ const RecipeCard: React.FC<Props> = ({ recipe, onDelete }) => {
       })
     : null;
 
-  const websiteUrl = "https://www.Baraka-Bites.com.pk";
+  const websiteUrl = "https://barakabites.app/";
   const recipeText = `🍽️ ${recipe.title}\n\n📝 ${recipe.description}\n\n🥘 Ingredients:\n${recipe.ingredients?.map(i => `• ${i}`).join('\n')}\n\n👨‍🍳 Instructions:\n${recipe.instructions?.map((i, idx) => `${idx + 1}. ${i}`).join('\n')}\n\n⏱️ Prep Time: ${recipe.prepTime} | Cook Time: ${recipe.cookTime}\n\nView more at ${websiteUrl}`;
 
   const handleDelete = async () => {

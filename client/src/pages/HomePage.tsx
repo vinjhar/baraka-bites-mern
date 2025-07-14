@@ -190,7 +190,6 @@ const HomePage: React.FC = () => {
     'Save favorite recipes',
     'Advanced cooking techniques',
     'Priority support',
-    "Downloadable du'a PDF book",
     '10% of proceeds donated to charity',
   ]}
   mode={STRIPE_PRODUCTS.PREMIUM.mode}
