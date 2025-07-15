@@ -155,12 +155,12 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
             placeholder='e.g., How do I make chocolate cake?'
             className="w-full p-3 border border-gray-300 rounded-md"
           />
-          <p className="text-sm text-gray-500 mt-1">If this is filled, other options will be ignored.</p>
+          <p className="text-sm text-gray-500 mt-1">If you type a dish here, we’ll ignore the ingredients below.</p>
         </div>
 
         <div className="flex items-center justify-between mt-4 mb-2">
           <h3 className="text-lg font-semibold text-gray-700 flex items-center">
-            or generate a recipe based on ingredients
+            Or, generate a recipe using your ingredients:
             <span className="ml-2 text-sm text-gray-500">(optional)</span>
           </h3>
           </div>
@@ -168,7 +168,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
         {/* Ingredients */}
         <div>
           <label htmlFor="ingredients" className="block text-gray-700 font-medium mb-2">
-            Ingredients (comma separated)
+            What ingredients do you have at home? (comma separated)
           </label>
           <textarea
             id="ingredients"
