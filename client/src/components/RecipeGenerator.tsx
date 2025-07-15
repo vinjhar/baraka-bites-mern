@@ -55,6 +55,22 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
     if (token) fetchUser();
   }, [token]);
 
+  // Auto-clear logic
+  useEffect(() => {
+    if (userPrompt.trim()) {
+      setIngredients('');
+      setMealType('Main Meals');
+      setCuisine('');
+      setHealthGoals('');
+    }
+  }, [userPrompt]);
+
+  useEffect(() => {
+    if (ingredients.trim() || mealType) {
+      setUserPrompt('');
+    }
+  }, [ingredients, mealType]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -83,7 +99,12 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
 
     try {
       const bodyData = isPromptMode
-        ? { userPrompt }
+        ? {
+            userPrompt,
+            servingSize,
+            spiceLevel,
+            avoid: avoid.split(',').map(a => a.trim()).filter(Boolean)
+          }
         : {
             ingredients: ingredients.split(',').map(i => i.trim()),
             mealType,
@@ -145,7 +166,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
         {/* Prompt Input */}
         <div>
           <label htmlFor="prompt" className="block text-gray-700 font-medium mb-2">
-            What would you like to cook with barakah today?
+            What would you like to cook with barakah today?
           </label>
           <input
             type="text"
@@ -163,7 +184,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
             Or, generate a recipe using your ingredients:
             <span className="ml-2 text-sm text-gray-500">(optional)</span>
           </h3>
-          </div>
+        </div>
 
         {/* Ingredients */}
         <div>
@@ -205,7 +226,7 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
           </select>
         </div>
 
-        {/* Optional Preferences Toggle */}
+        {/* Optional Preferences */}
         <div className="flex items-center justify-between mt-6 mb-2 cursor-pointer">
           <h3
             onClick={() => setShowPreferences(!showPreferences)}
@@ -229,7 +250,6 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
                   value={servingSize}
                   onChange={(e) => setServingSize(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-md"
-                  disabled={isPromptMode}
                 >
                   <option value="">Select...</option>
                   <option value="2">2 people</option>
@@ -246,7 +266,6 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
                   value={spiceLevel}
                   onChange={(e) => setSpiceLevel(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-md"
-                  disabled={isPromptMode}
                 >
                   <option value="">Select...</option>
                   <option value="No Spice">No Spice</option>
@@ -307,7 +326,6 @@ const RecipeGenerator: React.FC<Props> = ({ onSuccess }) => {
                 placeholder="e.g., peanuts, gluten"
                 className="w-full p-3 border border-gray-300 rounded-md"
                 rows={2}
-                disabled={isPromptMode}
               />
             </div>
           </div>

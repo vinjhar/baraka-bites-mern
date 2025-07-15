@@ -191,8 +191,8 @@ export const generateRecipeWithOpenAI = async (req, res) => {
   let optionalDetails = '';
   if (servingSize) optionalDetails += `\n- Serves approximately ${servingSize} people.`;
   if (spiceLevel) optionalDetails += `\n- The dish should be ${spiceLevel} in spice level.`;
-  if (cuisine) optionalDetails += `\n- Inspired by ${cuisine} cuisine.`;
-  if (healthGoals) optionalDetails += `\n- Align with these dietary goals: ${healthGoals}.`;
+  if (cuisine && !usingUserPrompt) optionalDetails += `\n- Inspired by ${cuisine} cuisine.`;
+  if (healthGoals && !usingUserPrompt) optionalDetails += `\n- Align with these dietary goals: ${healthGoals}.`;
   if (avoid?.length > 0)
     optionalDetails += `\n- Avoid these ingredients: ${avoid.join(', ')}.`;
 
@@ -206,6 +206,9 @@ You are a halal recipe generator.
 TASK:
 Create a 100% halal recipe based on this user query:
 "${userPrompt.trim()}"
+
+MUST INCLUDE:
+${optionalDetails}
 
 REQUIREMENTS:
 - The recipe must be halal (no pork, alcohol, or doubtful ingredients).
@@ -304,17 +307,16 @@ FORMAT:
       return res.status(500).json({ error: "Failed to parse JSON from OpenAI." });
     }
 
-    const normalizedOptions = usingUserPrompt
-      ? {}
-      : {
-          servingSize,
-          spiceLevel,
-          cuisine,
-          healthGoals,
-          avoid: Array.isArray(avoid)
-            ? avoid
-            : avoid?.split(",").map((a) => a.trim()).filter(Boolean),
-        };
+
+    const normalizedOptions = {
+      ...(servingSize && { servingSize }),
+      ...(spiceLevel && { spiceLevel }),
+      ...(cuisine && !usingUserPrompt && { cuisine }),
+      ...(healthGoals && !usingUserPrompt && { healthGoals }),
+      avoid: Array.isArray(avoid)
+        ? avoid
+        : avoid?.split(",").map((a) => a.trim()).filter(Boolean),
+    };
 
     const recipeDoc = await Recipe.create({
       ...parsedRecipe,
