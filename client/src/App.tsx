@@ -29,6 +29,7 @@ import ResendVerificationPage from './pages/ResendVerificationPage';
 import EmailVerified from './pages/EmailVerified';
 import PaymentSuccess from './pages/PaymentSuccess';
 import BillingPage from './pages/BillingPage';
+import BlogDetail from './pages/BlogDetail';
 
 
 const App = () => {
@@ -60,7 +61,9 @@ const App = () => {
                } />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/sunnah-foods" element={<SunnahFoodsPage />} />
+
               <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:slug" element={<BlogDetail />} />
               
             
               <Route path="/terms" element={<TermsPage />} />

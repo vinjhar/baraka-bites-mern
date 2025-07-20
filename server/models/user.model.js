@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema({
 
   stripeCustomerId: String,
   stripeSubscriptionId: String,
+
+  isAdmin: { type: Boolean, default: false },
  
 }, { timestamps: true });
 

@@ -9,7 +9,7 @@ import authRoutes from "./routes/auth.route.js"
 import recipeRoutes from "./routes/recipe.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import stripeWebhookRoutes from "./routes/stripeWebhook.js"
-
+import blogRoutes from "./routes/blog.route.js";
 
 dotenv.config();
 
@@ -29,7 +29,7 @@ app.use(passport.session());
 app.use('/api/v1/payment', paymentRoutes);
 app.use('/api/v1/recipes', recipeRoutes);
 app.use('/api/v1/auth', authRoutes);
-
+app.use('/api/v1/blogs', blogRoutes);
 
 app.get('/',(req, res)=> {
     res.send("Welcome to Baraka Bites")
