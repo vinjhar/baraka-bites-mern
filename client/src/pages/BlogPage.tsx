@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { Loader2, Pencil, Trash2, Plus, Eye, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { Loader2, Pencil, Trash2, Plus, Eye, AlertCircle, Search, X } from 'lucide-react';
 import BlogFormModal from '../components/BlogFormModal';
 import { useNavigate } from 'react-router-dom';
 
@@ -32,6 +32,7 @@ const BlogPage: React.FC = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [error, setError] = useState<string>('');
   const [deleteLoading, setDeleteLoading] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
@@ -157,6 +158,48 @@ const BlogPage: React.FC = () => {
     }
   };
 
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
+  // Filter blogs based on search query
+  const filteredBlogs = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return blogs;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    
+    return blogs.filter(blog => {
+      // Search in title
+      if (blog.title.toLowerCase().includes(query)) {
+        return true;
+      }
+      
+      // Search in content
+      if (blog.content.toLowerCase().includes(query)) {
+        return true;
+      }
+      
+      // Search in meta description
+      if (blog.metaDescription?.toLowerCase().includes(query)) {
+        return true;
+      }
+      
+      // Search in meta title
+      if (blog.metaTitle?.toLowerCase().includes(query)) {
+        return true;
+      }
+      
+      // Search in tags
+      if (blog.tags?.some(tag => tag.toLowerCase().includes(query))) {
+        return true;
+      }
+      
+      return false;
+    });
+  }, [blogs, searchQuery]);
+
   useEffect(() => {
     document.title = 'Blog - Baraka Bites';
     checkAdminStatus();
@@ -193,6 +236,37 @@ const BlogPage: React.FC = () => {
             </p>
           </div>
 
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative max-w-md mx-auto">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search blogs by title, content, or tags..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                >
+                  <X className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                </button>
+              )}
+            </div>
+            {searchQuery && (
+              <div className="text-center mt-3">
+                <p className="text-sm text-gray-600">
+                  {filteredBlogs.length} blog{filteredBlogs.length !== 1 ? 's' : ''} found for "{searchQuery}"
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Admin Controls */}
           {isAdmin && (
             <div className="flex justify-end mb-6">
@@ -214,26 +288,44 @@ const BlogPage: React.FC = () => {
           )}
 
           {/* Blog Content */}
-          {blogs.length === 0 ? (
+          {filteredBlogs.length === 0 ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <div className="max-w-md mx-auto">
-                <h3 className="text-xl font-semibold text-primary mb-2">No blogs published yet</h3>
-                <p className="text-gray-600 mb-4">
-                  {isAdmin ? "Ready to share your first story? Click 'Add New Blog' to get started!" : "Check back soon for delicious content!"}
-                </p>
-                {isAdmin && (
-                  <button
-                    onClick={handleAddNew}
-                    className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
-                  >
-                    Create First Blog
-                  </button>
+                {searchQuery ? (
+                  <>
+                    <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-primary mb-2">No blogs found</h3>
+                    <p className="text-gray-600 mb-4">
+                      No blogs match your search for "{searchQuery}". Try different keywords or browse all blogs.
+                    </p>
+                    <button
+                      onClick={clearSearch}
+                      className="text-primary hover:text-primary/80 font-medium"
+                    >
+                      Clear search
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-semibold text-primary mb-2">No blogs published yet</h3>
+                    <p className="text-gray-600 mb-4">
+                      {isAdmin ? "Ready to share your first story? Click 'Add New Blog' to get started!" : "Check back soon for delicious content!"}
+                    </p>
+                    {isAdmin && (
+                      <button
+                        onClick={handleAddNew}
+                        className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+                      >
+                        Create First Blog
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
           ) : (
             <div className="grid gap-6">
-              {blogs.map(blog => (
+              {filteredBlogs.map(blog => (
                 <article key={blog._id} className="bg-white rounded-lg shadow-md overflow-hidden">
                   <div className="flex flex-col md:flex-row">
                     {/* Blog Image - Smaller and on the side for larger screens */}

@@ -52,7 +52,7 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
       [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
       [{ 'direction': 'rtl' }],
       [{ 'align': [] }],
-      ['link', 'image', 'video'],
+      ['link', 'video'], 
       ['blockquote', 'code-block'],
       ['clean']
     ],
@@ -61,7 +61,7 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
     }
   }), []);
 
-  // React Quill formats
+  // React Quill formats (removed image)
   const quillFormats = [
     'header', 'font', 'size',
     'bold', 'italic', 'underline', 'strike',
@@ -69,7 +69,7 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
     'script',
     'list', 'bullet', 'indent',
     'direction', 'align',
-    'link', 'image', 'video',
+    'link', 'video', // Removed 'image' from here
     'blockquote', 'code-block'
   ];
 
