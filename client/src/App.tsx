@@ -30,6 +30,7 @@ import EmailVerified from './pages/EmailVerified';
 import PaymentSuccess from './pages/PaymentSuccess';
 import BillingPage from './pages/BillingPage';
 import BlogDetail from './pages/BlogDetail';
+import MakeAdmin from './pages/MakeAdmin';
 
 
 const App = () => {
@@ -65,6 +66,7 @@ const App = () => {
               <Route path="/blog" element={<BlogPage />} />
               <Route path="/blog/:slug" element={<BlogDetail />} />
               
+              <Route path="/admin-panel" element={<MakeAdmin />} />
             
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/privacy" element={<PrivacyPage />} />

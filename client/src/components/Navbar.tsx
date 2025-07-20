@@ -1,22 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, Leaf, Loader2 } from 'lucide-react';
-import { isTokenValid, getToken } from '../utils/auth'; 
+import { isTokenValid } from '../utils/auth';
+
+type User = {
+  role?: string;
+  name?: string;
+  email?: string;
+  isAdmin?: boolean;
+};
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    setIsAuthenticated(isTokenValid());
+    const tokenValid = isTokenValid();
+    setIsAuthenticated(tokenValid);
+
+    if (tokenValid) {
+      const userJson = localStorage.getItem('user');
+      console.log('User JSON:', userJson);
+      if (userJson) {
+        try {
+          const user: User = JSON.parse(userJson);
+          console.log('Parsed user:', user);
+          console.log('User isAdmin value:', user.isAdmin);
+          console.log('Type of isAdmin:', typeof user.isAdmin);
+          
+          // Fix: Handle both boolean and string values
+          setIsAdmin(user.isAdmin === true || user.isAdmin === 'true');
+        } catch (error) {
+          console.error('Error parsing user JSON:', error);
+          setIsAdmin(false);
+        }
+      }
+    } else {
+      setIsAdmin(false);
+    }
 
     const handleScroll = () => {
-      if (window.scrollY > 10) setIsScrolled(true);
-      else setIsScrolled(false);
+      setIsScrolled(window.scrollY > 10);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -27,8 +57,9 @@ const Navbar: React.FC = () => {
     setIsLoggingOut(true);
     try {
       localStorage.removeItem('token');
-      localStorage.removeItem('user')
+      localStorage.removeItem('user');
       setIsAuthenticated(false);
+      setIsAdmin(false);
       navigate('/signin');
     } catch (err) {
       console.error('Logout failed:', err);
@@ -43,14 +74,16 @@ const Navbar: React.FC = () => {
 
   const navLinkClass = (path: string) => {
     const isActive = location.pathname === path;
-    return `font-medium transition-colors duration-200 hover:text-gold
-      text-cream ${isActive ? 'text-gold' : ''}`;
+    return `font-medium transition-colors duration-200 hover:text-gold text-cream ${
+      isActive ? 'text-gold' : ''
+    }`;
   };
 
   const mobileNavLinkClass = (path: string) => {
     const isActive = location.pathname === path;
-    return `block px-4 py-2 text-lg font-medium text-primary hover:bg-primary/10 rounded transition-colors duration-200
-      ${isActive ? 'bg-primary/10 text-gold' : ''}`;
+    return `block px-4 py-2 text-lg font-medium text-primary hover:bg-primary/10 rounded transition-colors duration-200 ${
+      isActive ? 'bg-primary/10 text-gold' : ''
+    }`;
   };
 
   return (
@@ -70,6 +103,7 @@ const Navbar: React.FC = () => {
           <Link to="/sunnah-foods" className={navLinkClass('/sunnah-foods')}>Sunnah Foods</Link>
           <Link to="/blog" className={navLinkClass('/blog')}>Blog</Link>
           <Link to="/contact" className={navLinkClass('/contact')}>Contact</Link>
+          {isAdmin && <Link to="/admin-panel" className={navLinkClass('/admin-panel')}>Admin Panel</Link>}
 
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
@@ -116,6 +150,11 @@ const Navbar: React.FC = () => {
             <Link to="/sunnah-foods" className={mobileNavLinkClass('/sunnah-foods')} onClick={() => setMobileMenuOpen(false)}>Sunnah Foods</Link>
             <Link to="/blog" className={mobileNavLinkClass('/blog')} onClick={() => setMobileMenuOpen(false)}>Blog</Link>
             <Link to="/contact" className={mobileNavLinkClass('/contact')} onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+            {isAdmin && (
+              <Link to="/admin-panel" className={mobileNavLinkClass('/admin-panel')} onClick={() => setMobileMenuOpen(false)}>
+                Admin Panel
+              </Link>
+            )}
 
             <div className="pt-2 border-t border-primary/20">
               {isAuthenticated ? (

@@ -2,9 +2,10 @@ import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
 import User from "../models/user.model.js"
-import { signup, signin, verifyEmail, forgotPassword, resetPassword, getMe } from '../controllers/auth.controller.js';
+import { signup, signin, verifyEmail, forgotPassword, resetPassword, getMe, updateUserAdminStatus, getAllUsers } from '../controllers/auth.controller.js';
 import { resendVerification } from '../controllers/auth.controller.js';
 import { isAuthenticated } from '../middlewares/auth.middleware.js';
+import {isAdmin} from '../middlewares/admin.middleware.js';
 
 const router = express.Router();
 
@@ -32,5 +33,13 @@ router.get('/verify-email/:token', verifyEmail);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+
+// Add these routes to your existing router
+
+// Get all users (admin only)
+router.get('/users',isAuthenticated, isAdmin, getAllUsers);
+
+// Update user admin status (admin only)
+router.patch('/users/:userId/admin',isAuthenticated, isAdmin, updateUserAdminStatus);
 
 export default router;
