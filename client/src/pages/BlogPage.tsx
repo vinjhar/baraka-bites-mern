@@ -309,7 +309,7 @@ const BlogPage: React.FC = () => {
                   <>
                     <h3 className="text-xl font-semibold text-primary mb-2">No blogs published yet</h3>
                     <p className="text-gray-600 mb-4">
-                      {isAdmin ? "Ready to share your first story? Click 'Add New Blog' to get started!" : "Check back soon for delicious content!"}
+                      {isAdmin ? "Click 'Add New Blog OR Create First Blog' to get started!" : "Check back soon for delicious content!"}
                     </p>
                     {isAdmin && (
                       <button
