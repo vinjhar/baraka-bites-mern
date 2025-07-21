@@ -200,21 +200,24 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-export const updateUserAdminStatus = async (req, res) => {
+export const updateUserRoles = async (req, res) => {
   try {
     const { userId } = req.params;
-    const { isAdmin } = req.body;
+    const { isAdmin, isModerator } = req.body;
 
-    // Prevent user from removing their own admin status
-    if (req.user.id === userId && !isAdmin) {
+    if (req.user.id === userId && isAdmin === false) {
       return res
         .status(400)
         .json({ message: "You cannot remove your own admin privileges" });
     }
 
+    const updateFields = {};
+    if (typeof isAdmin === "boolean") updateFields.isAdmin = isAdmin;
+    if (typeof isModerator === "boolean") updateFields.isModerator = isModerator;
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { isAdmin },
+      { $set: updateFields },
       { new: true }
     ).select("-password -__v");
 
@@ -224,7 +227,7 @@ export const updateUserAdminStatus = async (req, res) => {
 
     res.json(updatedUser);
   } catch (error) {
-    console.error("Error updating user admin status:", error);
-    res.status(500).json({ message: "Server error while updating user" });
+    console.error("Error updating user roles:", error);
+    res.status(500).json({ message: "Server error while updating user roles" });
   }
 };

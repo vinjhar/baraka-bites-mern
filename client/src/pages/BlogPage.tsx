@@ -30,6 +30,7 @@ const BlogPage: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingBlog, setEditingBlog] = useState<Blog | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [error, setError] = useState<string>('');
   const [deleteLoading, setDeleteLoading] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -70,6 +71,7 @@ const BlogPage: React.FC = () => {
   const checkAdminStatus = useCallback(async () => {
     if (!token) {
       setIsAdmin(false);
+      setIsModerator(false);
       return;
     }
 
@@ -83,8 +85,10 @@ const BlogPage: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setIsAdmin(data?.user?.isAdmin === true);
+        setIsModerator(data?.user?.isModerator === true);
       } else {
         setIsAdmin(false);
+        setIsModerator(false);
         // If token is invalid, remove it
         if (res.status === 401) {
           localStorage.removeItem('token');
@@ -93,8 +97,11 @@ const BlogPage: React.FC = () => {
     } catch (err) {
       console.error("Failed to fetch user info", err);
       setIsAdmin(false);
+      setIsModerator(false);
     }
   }, [token]);
+
+  const canEdit = isAdmin || isModerator;
 
   const handleDelete = async (id: string) => {
     const confirmDelete = window.confirm("Are you sure you want to delete this blog? This action cannot be undone.");
@@ -268,7 +275,7 @@ const BlogPage: React.FC = () => {
           </div>
 
           {/* Admin Controls */}
-          {isAdmin && (
+          {canEdit && (
             <div className="flex justify-end mb-6">
               <button
                 onClick={handleAddNew}
@@ -309,9 +316,9 @@ const BlogPage: React.FC = () => {
                   <>
                     <h3 className="text-xl font-semibold text-primary mb-2">No blogs published yet</h3>
                     <p className="text-gray-600 mb-4">
-                      {isAdmin ? "Click 'Add New Blog OR Create First Blog' to get started!" : "Check back soon for delicious content!"}
+                      {canEdit ? "Click 'Add New Blog OR Create First Blog' to get started!" : "Check back soon for delicious content!"}
                     </p>
-                    {isAdmin && (
+                    {canEdit && (
                       <button
                         onClick={handleAddNew}
                         className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
@@ -385,7 +392,7 @@ const BlogPage: React.FC = () => {
                           <Eye className="w-4 h-4" /> Read More
                         </button>
                         
-                        {isAdmin && (
+                        {canEdit && (
                           <>
                             <button
                               onClick={() => handleEdit(blog)}

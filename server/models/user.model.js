@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
   stripeSubscriptionId: String,
 
   isAdmin: { type: Boolean, default: false },
+  isModerator: { type: Boolean, default: false },
  
 }, { timestamps: true });
 
