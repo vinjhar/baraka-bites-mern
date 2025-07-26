@@ -10,11 +10,20 @@ import recipeRoutes from "./routes/recipe.route.js"
 import paymentRoutes from "./routes/payment.route.js"
 import stripeWebhookRoutes from "./routes/stripeWebhook.js"
 import blogRoutes from "./routes/blog.route.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 6001;
+
+// Get current directory (needed for ES modules)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from uploads directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(cors()); 
 

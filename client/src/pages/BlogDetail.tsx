@@ -91,6 +91,10 @@ const BlogDetail: React.FC = () => {
   };
 
   const getImageUrl = (blog: Blog) => {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL;
+    if (blog.coverImage) {
+      return `${baseUrl}${blog.coverImage}`;
+    }
     return blog.coverImage || blog.image;
   };
 

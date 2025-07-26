@@ -16,8 +16,8 @@ const BlogSchema = new mongoose.Schema(
       required: true, // should contain HTML or markdown
     },
     coverImage: {
-      type: String, // URL to uploaded image
-      required: true,
+      type: String, // URL to uploaded image or external URL
+      required: false, // Made optional since image can be uploaded or URL
     },
     tags: {
       type: [String],

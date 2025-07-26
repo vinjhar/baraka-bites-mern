@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { X, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { X, AlertCircle, Eye, EyeOff, Upload, Trash2 } from 'lucide-react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -36,6 +36,10 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url'); // Track which method user wants
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const token = localStorage.getItem('token');
   const isEditing = Boolean(existingBlog);
@@ -76,14 +80,21 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
   // Initialize form data
   useEffect(() => {
     if (existingBlog) {
+      const coverImage = existingBlog.coverImage || existingBlog.image || '';
       setFormData({
         title: existingBlog.title || '',
         content: existingBlog.content || '',
-        coverImage: existingBlog.coverImage || existingBlog.image || '',
+        coverImage,
         tags: existingBlog.tags?.join(', ') || '',
         metaTitle: existingBlog.metaTitle || '',
         metaDescription: existingBlog.metaDescription || '',
       });
+      
+      // Set image preview for existing blog
+      if (coverImage) {
+        setImagePreview(coverImage);
+        setImageMethod('url'); // Default to URL for existing images
+      }
     }
   }, [existingBlog]);
 
@@ -106,6 +117,74 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
     
     // Clear error when user starts typing
     if (error) setError('');
+  };
+
+  // Handle image method change
+  const handleImageMethodChange = (method: 'url' | 'upload') => {
+    setImageMethod(method);
+    
+    if (method === 'upload') {
+      // Clear URL when switching to upload
+      setFormData(prev => ({ ...prev, coverImage: '' }));
+      if (!selectedFile) {
+        setImagePreview('');
+      }
+    } else {
+      // Clear file when switching to URL
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      if (!formData.coverImage) {
+        setImagePreview('');
+      }
+    }
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select a valid image file');
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size should be less than 5MB');
+        return;
+      }
+      
+      setSelectedFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Clear any previous errors
+      setError('');
+    }
+  };
+
+  // Handle URL image change
+  const handleImageUrlChange = (url: string) => {
+    handleInputChange('coverImage', url);
+    setImagePreview(url);
+  };
+
+  // Remove image
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setFormData(prev => ({ ...prev, coverImage: '' }));
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const validateForm = (): boolean => {
@@ -143,7 +222,6 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
     setError('');
 
     try {
-      const method = isEditing ? 'PUT' : 'POST';
       const url = isEditing
         ? `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs/${existingBlog!._id}`
         : `${import.meta.env.VITE_API_BASE_URL}/api/v1/blogs`;
@@ -153,22 +231,37 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0);
 
-      const body = {
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        coverImage: formData.coverImage.trim() || undefined,
-        tags: processedTags.length > 0 ? processedTags : undefined,
-        metaTitle: formData.metaTitle.trim() || undefined,
-        metaDescription: formData.metaDescription.trim() || undefined,
-      };
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      formDataToSend.append('title', formData.title.trim());
+      formDataToSend.append('content', formData.content.trim());
+      
+      // Handle image - either file upload or URL
+      if (imageMethod === 'upload' && selectedFile) {
+        formDataToSend.append('coverImage', selectedFile);
+      } else if (imageMethod === 'url' && formData.coverImage.trim()) {
+        formDataToSend.append('coverImageUrl', formData.coverImage.trim());
+      }
+      
+      // Add optional fields
+      if (processedTags.length > 0) {
+        formDataToSend.append('tags', JSON.stringify(processedTags));
+      }
+      if (formData.metaTitle.trim()) {
+        formDataToSend.append('metaTitle', formData.metaTitle.trim());
+      }
+      if (formData.metaDescription.trim()) {
+        formDataToSend.append('metaDescription', formData.metaDescription.trim());
+      }
 
+      const method = isEditing ? 'PUT' : 'POST';
       const res = await fetch(url, {
         method,
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
+          // Don't set Content-Type header - let browser set it with boundary for FormData
         },
-        body: JSON.stringify(body),
+        body: formDataToSend,
       });
 
       if (!res.ok) {
@@ -310,25 +403,94 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
 
               {/* Cover Image */}
               <div>
-                <label className="block font-medium mb-2 text-gray-700">Cover Image URL</label>
-                <input
-                  type="url"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                  value={formData.coverImage}
-                  onChange={e => handleInputChange('coverImage', e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  disabled={loading}
-                />
-                {formData.coverImage && (
-                  <div className="mt-2">
+                <label className="block font-medium mb-2 text-gray-700">Cover Image</label>
+                
+                {/* Image Method Selector */}
+                <div className="flex gap-4 mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="imageMethod"
+                      value="url"
+                      checked={imageMethod === 'url'}
+                      onChange={() => handleImageMethodChange('url')}
+                      disabled={loading}
+                      className="text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-gray-700">Use URL</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="imageMethod"
+                      value="upload"
+                      checked={imageMethod === 'upload'}
+                      onChange={() => handleImageMethodChange('upload')}
+                      disabled={loading}
+                      className="text-primary focus:ring-primary"
+                    />
+                    <span className="text-sm text-gray-700">Upload File</span>
+                  </label>
+                </div>
+
+                {/* URL Input */}
+                {imageMethod === 'url' && (
+                  <input
+                    type="url"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    value={formData.coverImage}
+                    onChange={e => handleImageUrlChange(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    disabled={loading}
+                  />
+                )}
+
+                {/* File Upload */}
+                {imageMethod === 'upload' && (
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      disabled={loading}
+                      className="hidden"
+                    />
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary/50 transition-colors cursor-pointer text-center"
+                    >
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600">
+                        {selectedFile ? selectedFile.name : 'Click to select an image'}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image Preview */}
+                {imagePreview && (
+                  <div className="mt-4 relative">
                     <img 
-                      src={formData.coverImage} 
+                      src={imagePreview} 
                       alt="Preview" 
-                      className="w-full h-32 object-cover rounded-lg"
+                      className="w-full h-48 object-cover rounded-lg"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
+                        setError('Failed to load image. Please check the URL or try a different image.');
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      disabled={loading}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 )}
               </div>
@@ -404,9 +566,9 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
                   </div>
 
                   {/* Image Preview */}
-                  {formData.coverImage && (
+                  {imagePreview && (
                     <img 
-                      src={formData.coverImage} 
+                      src={imagePreview} 
                       alt="Cover preview" 
                       className="w-full h-40 object-cover rounded"
                       onError={(e) => {

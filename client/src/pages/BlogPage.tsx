@@ -150,7 +150,8 @@ const BlogPage: React.FC = () => {
   };
 
   const getImageUrl = (blog: Blog) => {
-    return blog.coverImage || blog.image;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL
+    return blog.coverImage ? `${baseUrl}${blog.coverImage}` : blog.image;
   };
 
   const formatDate = (dateString: string) => {
