@@ -36,7 +36,6 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url'); // Track which method user wants
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -93,7 +92,6 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
       // Set image preview for existing blog
       if (coverImage) {
         setImagePreview(coverImage);
-        setImageMethod('url'); // Default to URL for existing images
       }
     }
   }, [existingBlog]);
@@ -117,28 +115,6 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
     
     // Clear error when user starts typing
     if (error) setError('');
-  };
-
-  // Handle image method change
-  const handleImageMethodChange = (method: 'url' | 'upload') => {
-    setImageMethod(method);
-    
-    if (method === 'upload') {
-      // Clear URL when switching to upload
-      setFormData(prev => ({ ...prev, coverImage: '' }));
-      if (!selectedFile) {
-        setImagePreview('');
-      }
-    } else {
-      // Clear file when switching to URL
-      setSelectedFile(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-      if (!formData.coverImage) {
-        setImagePreview('');
-      }
-    }
   };
 
   // Handle file selection
@@ -169,12 +145,6 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
       // Clear any previous errors
       setError('');
     }
-  };
-
-  // Handle URL image change
-  const handleImageUrlChange = (url: string) => {
-    handleInputChange('coverImage', url);
-    setImagePreview(url);
   };
 
   // Remove image
@@ -236,11 +206,9 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
       formDataToSend.append('title', formData.title.trim());
       formDataToSend.append('content', formData.content.trim());
       
-      // Handle image - either file upload or URL
-      if (imageMethod === 'upload' && selectedFile) {
+      // Handle image upload
+      if (selectedFile) {
         formDataToSend.append('coverImage', selectedFile);
-      } else if (imageMethod === 'url' && formData.coverImage.trim()) {
-        formDataToSend.append('coverImageUrl', formData.coverImage.trim());
       }
       
       // Add optional fields
@@ -401,75 +369,33 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
                 </div>
               </div>
 
-              {/* Cover Image */}
+              {/* Cover Image - Upload Only */}
               <div>
                 <label className="block font-medium mb-2 text-gray-700">Cover Image</label>
                 
-                {/* Image Method Selector */}
-                <div className="flex gap-4 mb-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="imageMethod"
-                      value="url"
-                      checked={imageMethod === 'url'}
-                      onChange={() => handleImageMethodChange('url')}
-                      disabled={loading}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-gray-700">Use URL</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="imageMethod"
-                      value="upload"
-                      checked={imageMethod === 'upload'}
-                      onChange={() => handleImageMethodChange('upload')}
-                      disabled={loading}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-gray-700">Upload File</span>
-                  </label>
-                </div>
-
-                {/* URL Input */}
-                {imageMethod === 'url' && (
-                  <input
-                    type="url"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
-                    value={formData.coverImage}
-                    onChange={e => handleImageUrlChange(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    disabled={loading}
-                  />
-                )}
-
                 {/* File Upload */}
-                {imageMethod === 'upload' && (
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileSelect}
-                      disabled={loading}
-                      className="hidden"
-                    />
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary/50 transition-colors cursor-pointer text-center"
-                    >
-                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                      <p className="text-gray-600">
-                        {selectedFile ? selectedFile.name : 'Click to select an image'}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        PNG, JPG, GIF up to 5MB
-                      </p>
-                    </div>
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    disabled={loading}
+                    className="hidden"
+                  />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary/50 transition-colors cursor-pointer text-center"
+                  >
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">
+                      {selectedFile ? selectedFile.name : 'Click to select an image'}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG, GIF up to 5MB
+                    </p>
                   </div>
-                )}
+                </div>
 
                 {/* Image Preview */}
                 {imagePreview && (
@@ -480,7 +406,7 @@ const BlogFormModal: React.FC<Props> = ({ onClose, onSuccess, existingBlog }) =>
                       className="w-full h-48 object-cover rounded-lg"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
-                        setError('Failed to load image. Please check the URL or try a different image.');
+                        setError('Failed to load image. Please try a different image.');
                       }}
                     />
                     <button
